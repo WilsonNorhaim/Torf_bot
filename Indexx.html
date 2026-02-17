@@ -2,195 +2,339 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>Floky — загрузка...</title>
-    <!-- Font Awesome 6 (иконки) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Floky — социальная сеть</title>
+    <!-- Font Awesome 5 (иконки) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* Глобальные переменные — тёмная тема (dark blue night) */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
-        /* переменные темы (тёмная по умолчанию — сине-фиолетовая ночь) */
         body {
-            --bg-gradient: radial-gradient(circle at 30% 20%, #121c2f, #040918);
-            --glass-bg: rgba(25, 30, 50, 0.4);
-            --glass-border: rgba(150, 130, 220, 0.3);
-            --text-primary: #f0f2ff;
-            --text-secondary: #b5c0e0;
-            --accent: #9b7aff;
-            --accent-glow: rgba(155, 122, 255, 0.5);
-            --nav-bg: rgba(20, 22, 40, 0.7);
-            --reaction-inactive: #a5b3d9;
-            transition: background 0.3s, color 0.2s;
-            background: var(--bg-gradient);
+            background: radial-gradient(circle at 20% 30%, #0c1a2b, #030614);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding: 0 0 80px 0;
+            padding: 8px 0 80px 0;
+            transition: background 0.4s ease;
         }
 
-        /* светлая тема (унисекс, холодный фиолет) */
+        /* светлая тема — будет переключаться через класс на body */
         body.light-theme {
-            --bg-gradient: radial-gradient(circle at 30% 20%, #e3e9f5, #cbd5e8);
-            --glass-bg: rgba(240, 240, 255, 0.6);
-            --glass-border: rgba(120, 100, 200, 0.3);
-            --text-primary: #10141e;
-            --text-secondary: #2f3a5c;
-            --accent: #7f62e6;
-            --accent-glow: rgba(127, 98, 230, 0.4);
-            --nav-bg: rgba(230, 230, 250, 0.7);
-            --reaction-inactive: #4f5299;
+            background: radial-gradient(circle at 20% 30%, #d9e2ef, #b0c4de);
         }
 
-        /* загрузочный экран */
-        .splash-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #0b0e1a;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.8s ease, visibility 0.8s;
-            backdrop-filter: blur(8px);
-        }
-        .splash-logo {
-            width: 120px;
-            height: 120px;
-            background: url('Floky.png') center/cover no-repeat;
-            border-radius: 40px;
-            box-shadow: 0 0 50px #ac8eff, 0 20px 40px -10px #220066;
-            animation: pulseGlow 1.5s infinite alternate;
-        }
-        @keyframes pulseGlow {
-            from { box-shadow: 0 0 30px #9f85ff, 0 10px 30px -5px #3e1a9e; transform: scale(1); }
-            to { box-shadow: 0 0 70px #c6aeff, 0 20px 50px -5px #5c31c2; transform: scale(1.03); }
-        }
-        .splash-text {
-            margin-top: 25px;
-            font-size: 42px;
-            font-weight: 800;
-            background: linear-gradient(145deg, #dcc9ff, #ad90ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 2px;
-        }
-        .splash-sub {
-            color: #a8b3e0;
-            margin-top: 8px;
+        body.light-theme .glass-card,
+        body.light-theme .bottom-nav,
+        body.light-theme .post-card,
+        body.light-theme .profile-header,
+        body.light-theme .comment-box,
+        body.light-theme .story-item {
+            background: rgba(245, 245, 255, 0.5) !important;
+            backdrop-filter: blur(18px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 15px 30px rgba(0, 10, 30, 0.1);
+            color: #0a0f1e;
         }
 
-        /* основной контейнер — анимация появления */
+        body.light-theme .post-text,
+        body.light-theme .nickname,
+        body.light-theme .username,
+        body.light-theme .stats,
+        body.light-theme .comments-title {
+            color: #111827;
+        }
+
+        body.light-theme .fa-regular,
+        body.light-theme .fa-solid,
+        body.light-theme .icon-text {
+            color: #2c3e50;
+        }
+
+        /* контейнер — вся соц сеть */
         .app-container {
             width: 100%;
             max-width: 480px;
             margin: 0 auto;
             position: relative;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.6s ease, transform 0.5s ease;
-        }
-        .app-container.visible {
-            opacity: 1;
-            transform: translateY(0);
+            border-radius: 32px 32px 0 0;
+            overflow: hidden;
         }
 
-        /* стеклянные карточки */
-        .glass-card, .post-card, .profile-header, .bottom-nav, .story-item, .comment-box, .search-bar, .settings-item, .notice-item {
-            background: var(--glass-bg);
-            backdrop-filter: blur(18px) saturate(180%);
-            -webkit-backdrop-filter: blur(18px) saturate(180%);
-            border: 1px solid var(--glass-border);
-            border-radius: 28px;
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
-            transition: all 0.25s ease;
+        /* ========== ЖИДКОЕ СТЕКЛО ========== */
+        .glass-card, .post-card, .profile-header, .bottom-nav, .story-item, .comment-box {
+            background: rgba(18, 28, 45, 0.4);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid rgba(110, 130, 170, 0.25);
+            border-radius: 24px;
+            box-shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1);
         }
 
-        /* шапка */
+        /* header с логотипом и переключателем темы */
         .top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 12px 20px;
+            margin-bottom: 6px;
         }
         .logo-area {
             display: flex;
             align-items: center;
             gap: 10px;
-            cursor: pointer;
         }
         .logo-img {
             width: 40px;
             height: 40px;
             background: url('Floky.png') center/cover no-repeat;
             border-radius: 14px;
-            background-color: #6e4bff;
+            background-color: #6e4bff; /* fallback */
+            box-shadow: 0 5px 12px rgba(158, 0, 255, 0.3);
         }
         .logo-text {
             font-size: 28px;
             font-weight: 800;
-            background: linear-gradient(135deg, #cfb5ff, #a57cff);
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #c7b3ff, #a678ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         .theme-toggle {
-            background: rgba(200, 180, 255, 0.15);
-            border: 1px solid var(--glass-border);
+            background: rgba(180, 160, 255, 0.2);
+            border: 1px solid rgba(210, 180, 255, 0.4);
             border-radius: 60px;
             padding: 8px 14px;
             color: #d9c9ff;
             font-size: 18px;
+            backdrop-filter: blur(5px);
             cursor: pointer;
             transition: 0.2s;
         }
-        .theme-toggle:active { transform: scale(0.9); background: var(--accent); color: white; }
+        .theme-toggle:active { transform: scale(0.94); background: #6d58b1; color: white; }
 
-        /* поиск */
-        .search-bar {
-            margin: 8px 16px 16px;
-            padding: 10px 18px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: var(--text-secondary);
-        }
-        .search-bar i { font-size: 18px; }
-        .search-bar input {
-            background: transparent;
-            border: none;
-            color: var(--text-primary);
-            font-size: 16px;
-            width: 100%;
-            outline: none;
-        }
-        .search-bar input::placeholder { color: var(--text-secondary); opacity: 0.7; }
-
-        /* истории (статические) */
+        /* ИСТОРИИ / stories (для красоты) */
         .stories-row {
             display: flex;
             gap: 14px;
-            padding: 8px 16px;
+            padding: 10px 16px;
             overflow-x: auto;
-            margin-bottom: 10px;
+            scrollbar-width: none;
+            margin-bottom: 8px;
         }
         .stories-row::-webkit-scrollbar { display: none; }
         .story-item {
-            min-width: 70px;
-            height: 70px;
-            border-radius: 35px;
+            min-width: 72px;
+            height: 72px;
+            border-radius: 36px;
+            background: rgba(30, 40, 60, 0.5);
+            backdrop-filter: blur(12px);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border: 2px solid var(--accent);
-            color: var(--text-primary);
+            border: 2px solid #aa7eff;
+            padding: 4px;
+            color: white;
             font-size: 12px;
+        }
+        .story-item i { font-size: 28px; color: #d9b0ff; }
+
+        /* ===== ПОСТ ===== */
+        .post-card {
+            margin: 16px 16px 20px 16px;
+            padding: 16px 14px 12px 14px;
+            transition: 0.3s;
+            position: relative;
+            border-left: 4px solid transparent;
+        }
+        /* эффект пламени при реакции */
+        .post-card.reacted-flame {
+            border-left: 4px solid #ff7b2b;
+            box-shadow: 0 0 25px #f90, 0 0 40px #ff5e00 inset;
+            background: rgba(40, 20, 10, 0.7);
+            animation: flameFlicker 0.6s ease;
+        }
+        @keyframes flameFlicker {
+            0% { box-shadow: 0 0 10px #ff9900, 0 0 20px #ff4400; }
+            50% { box-shadow: 0 0 30px #ffaa33, 0 0 60px #ff2200; }
+            100% { box-shadow: 0 0 10px #ff9900, 0 0 20px #ff4400; }
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 28px;
+            background: #6450c0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .post-user-info {
+            flex: 1;
+        }
+        .post-user-info .name {
+            font-weight: 700;
+            color: #f0eaff;
+            font-size: 16px;
+        }
+        .post-user-info .handle {
+            color: #a8b3cf;
+            font-size: 13px;
+        }
+        .three-dots {
+            color: #c7b9ff;
+            font-size: 20px;
+            padding: 8px;
+            border-radius: 20px;
+            background: rgba(0,0,0,0.2);
+            width: 40px;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+        }
+        /* меню трёх точек (простейшее) */
+        .dots-menu {
+            position: absolute;
+            right: 10px;
+            background: rgba(20, 20, 40, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 12px 8px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            border: 1px solid #a07eff;
+        }
+        .dots-menu.show {
+            display: flex;
+        }
+        .dots-menu span {
+            color: white;
+            padding: 8px 18px;
+            border-radius: 30px;
+            background: rgba(255,255,255,0.05);
+            font-size: 14px;
+        }
+        .dots-menu span i { margin-right: 8px; width: 20px; }
+
+        .post-content {
+            margin-bottom: 14px;
+        }
+        .post-text {
+            color: rgba(240, 242, 255, 0.9);
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+        .media-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            border-radius: 24px;
+            overflow: hidden;
+            margin-top: 8px;
+            max-height: 300px;
+        }
+        .media-grid img, .media-grid video {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .two-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+        }
+
+        /* реакции */
+        .reaction-bar {
+            display: flex;
+            gap: 25px;
+            margin: 12px 0 6px;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 40px;
+            width: fit-content;
+        }
+        .reaction-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #cdd6f0;
+            font-size: 18px;
+            transition: 0.15s;
+            cursor: pointer;
+        }
+        .reaction-btn i { font-size: 24px; }
+        .reaction-count { font-size: 15px; }
+        .wolf-active { color: #b38cff; }
+        .fire-active { color: #ff9448; text-shadow: 0 0 8px orange; }
+        .heart-active { color: #ff69b4; }
+
+        /* комментарии */
+        .comment-section {
+            margin-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 12px;
+        }
+        .comment-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 8px 16px;
+            margin: 10px 0;
+            background: rgba(20, 28, 45, 0.5);
+            border-radius: 40px;
+        }
+        .comment-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 15px;
+            outline: none;
+        }
+        .comment-box input::placeholder { color: #94a3b8; }
+        .comment-box button {
+            background: #8a6aff;
+            border: none;
+            border-radius: 40px;
+            padding: 8px 16px;
+            color: white;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+        }
+        .comments-list {
+            max-height: 180px;
+            overflow-y: auto;
+            font-size: 13px;
+            color: #cbd5e1;
+            margin-top: 8px;
+        }
+        .single-comment {
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            margin-bottom: 6px;
         }
 
         /* нижняя навигация */
@@ -205,516 +349,382 @@
             justify-content: space-around;
             padding: 8px 10px;
             border-radius: 60px;
-            background: var(--nav-bg);
-            z-index: 1000;
-            border: 1px solid var(--glass-border);
+            background: rgba(20, 25, 45, 0.6);
+            z-index: 200;
+            border: 1px solid rgba(200, 180, 255, 0.4);
+            backdrop-filter: blur(25px);
         }
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            color: var(--text-secondary);
+            color: #b7bede;
             font-size: 12px;
-            transition: 0.15s;
+            transition: 0.2s;
             cursor: pointer;
-            padding: 6px 16px;
+            padding: 4px 12px;
             border-radius: 40px;
         }
-        .nav-item i { font-size: 22px; margin-bottom: 3px; }
+        .nav-item i { font-size: 22px; margin-bottom: 2px; }
         .nav-item.active {
-            background: var(--accent);
-            color: white;
-            box-shadow: 0 0 15px var(--accent-glow);
+            background: #6d4aff50;
+            color: #e3d5ff;
+            border: 1px solid #aa88ff;
         }
 
-        /* секции (переключаются) */
-        .section {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-        .section.active-section { display: block; }
-        @keyframes fadeIn { 0% { opacity: 0.3; } 100% { opacity: 1; } }
-
-        /* пост */
-        .post-card {
-            margin: 16px;
-            padding: 16px 14px 12px;
-            transition: 0.2s;
-            position: relative;
-        }
-        .post-card.reacted-flame {
-            box-shadow: 0 0 30px #ff7b00, 0 0 15px #f60 inset;
-            border-color: #ffb347;
-            background: rgba(70, 40, 20, 0.5);
-            transition: 0.1s;
-        }
-
-        .post-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-        .post-avatar {
-            width: 48px; height: 48px; border-radius: 50%;
-            background: linear-gradient(145deg, #b28aff, #6d3bcf);
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 24px; font-weight: bold;
-            cursor: pointer;
-        }
-        .post-user-info {
-            flex: 1;
-            cursor: pointer;
-        }
-        .post-user-info .name { font-weight: 700; color: var(--text-primary); }
-        .post-user-info .handle { color: var(--text-secondary); font-size: 13px; }
-        .three-dots {
-            color: var(--text-secondary);
-            font-size: 22px;
-            padding: 8px;
-            background: rgba(0,0,0,0.15);
-            border-radius: 30px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .dots-menu {
-            position: absolute; right: 0; top: 40px;
-            background: var(--nav-bg);
-            backdrop-filter: blur(30px);
-            border-radius: 20px;
-            padding: 10px 0;
-            display: none; flex-direction: column;
-            z-index: 1100;
-            border: 1px solid var(--glass-border);
-            min-width: 160px;
-        }
-        .dots-menu.show { display: flex; }
-        .dots-menu span {
-            padding: 12px 20px;
-            color: var(--text-primary);
-            font-size: 14px;
-            display: flex; gap: 12px;
-        }
-        .dots-menu span:hover { background: var(--accent); }
-
-        .post-media {
-            border-radius: 24px;
-            overflow: hidden;
-            margin: 12px 0;
-            max-height: 300px;
-        }
-        .post-media img, .post-media video {
-            width: 100%;
-            max-height: 280px;
-            object-fit: cover;
-            border-radius: 20px;
-        }
-        .reaction-bar {
-            display: flex; gap: 28px; margin: 12px 0;
-        }
-        .reaction-btn {
-            display: flex; align-items: center; gap: 6px;
-            color: var(--reaction-inactive);
-            font-size: 22px;
-            cursor: pointer;
-            transition: 0.15s;
-            user-select: none;
-        }
-        .reaction-btn.active-wolf { color: #b38cff; text-shadow: 0 0 8px #c78aff; }
-        .reaction-btn.active-fire { color: #ff9448; text-shadow: 0 0 12px #ff6600; }
-        .reaction-btn.active-heart { color: #ff69b4; text-shadow: 0 0 12px #ff3388; }
-
-        /* комментарии */
-        .comment-box {
-            display: flex; align-items: center;
-            padding: 6px 16px; margin: 10px 0; gap: 8px;
-        }
-        .comment-box input {
-            flex: 1; background: transparent; border: none;
-            color: var(--text-primary); outline: none;
-        }
-        .comment-box button {
-            background: var(--accent); border: none;
-            border-radius: 40px; padding: 8px 16px; color: white;
-        }
-        .comments-list {
-            max-height: 150px; overflow-y: auto;
-            font-size: 14px; color: var(--text-secondary);
-        }
-
-        /* Профиль */
+        /* ПРОФИЛЬ */
         .profile-header {
-            margin: 16px; padding: 22px 18px;
-            display: flex; flex-direction: column; align-items: center;
+            margin: 16px;
+            padding: 22px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
         }
         .profile-avatar {
-            width: 100px; height: 100px; border-radius: 50%;
-            background: #8550e0; font-size: 50px; color: white;
-            display: flex; align-items: center; justify-content: center;
-            border: 4px solid var(--accent); margin-bottom: 12px;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: #8550e0;
+            border: 4px solid #c39dff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 44px;
+            color: white;
+            margin-bottom: 10px;
         }
         .display-name {
-            font-size: 24px; font-weight: bold; color: var(--text-primary);
-            display: flex; gap: 8px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .username { color: var(--text-secondary); margin: 4px 0 12px; }
+        .display-name i { color: #3b82f6; font-size: 20px; }
+        .username {
+            color: #aab5d6;
+            margin: 4px 0 12px;
+        }
         .stats-row {
-            display: flex; gap: 28px; margin: 16px 0;
+            display: flex;
+            gap: 24px;
+            margin: 16px 0;
         }
-        .stat-item { display: flex; flex-direction: column; align-items: center; color: var(--text-primary); }
-        .follow-btn {
-            background: var(--accent); border: none; border-radius: 40px;
-            padding: 12px 40px; font-weight: 600; color: white;
-            margin: 10px; cursor: pointer;
-        }
+        .stat-item { display: flex; flex-direction: column; font-weight: 600; color: white;}
+        .stat-item span:first-child { font-size: 20px; }
+        .stat-item span:last-child { color: #b7c3e0; font-size: 13px; }
         .new-post-btn {
-            background: var(--accent); border: none; border-radius: 40px;
-            padding: 10px 30px; color: white; font-weight: 600; cursor: pointer;
+            background: #9b7aff;
+            border: none;
+            color: white;
+            padding: 12px 36px;
+            border-radius: 60px;
+            font-size: 18px;
+            font-weight: 600;
+            box-shadow: 0 8px 18px #3f2b8070;
+            cursor: pointer;
         }
 
-        /* настройки */
-        .settings-item {
-            margin: 12px 16px; padding: 16px 20px;
-            display: flex; align-items: center; gap: 18px;
-            color: var(--text-primary); cursor: pointer;
-        }
-        /* уведомления */
-        .notice-item {
-            margin: 12px 16px; padding: 16px 20px;
-            display: flex; align-items: center; gap: 16px;
+        /* спрятанные секции, позже переключение через JS */
+        .section {
+            display: block;
         }
 
-        /* кнопка читать (мини) */
-        .read-btn {
-            background: transparent; border: 1px solid var(--accent);
-            border-radius: 30px; padding: 4px 16px; color: var(--accent);
-            font-size: 13px; font-weight: 600; cursor: pointer;
-        }
-        .read-btn:hover { background: var(--accent); color: white; }
-
-        /* анимации */
-        .post-card, .profile-header, .settings-item { transition: transform 0.2s, box-shadow 0.3s; }
-        .post-card:active { transform: scale(0.99); }
-
-        /* кастомный плеер (упрощённо) */
-        video {
-            border-radius: 20px;
-            background: black;
+        /* адаптив */
+        @media (max-width: 420px) {
+            .logo-text { font-size: 24px; }
         }
     </style>
 </head>
-<body>
-    <!-- Загрузочный экран (3 секунды) -->
-    <div class="splash-screen" id="splash">
-        <div class="splash-logo"></div>
-        <div class="splash-text">Floky</div>
-        <div class="splash-sub">загружаем вселенную...</div>
-    </div>
-
+<body class="dark-theme">
     <div class="app-container" id="appContainer">
-        <!-- ШАПКА -->
+
+        <!-- ШАПКА с логотипом и переключателем темы -->
         <div class="top-bar">
-            <div class="logo-area" id="homeBtn">
-                <div class="logo-img"></div>
+            <div class="logo-area">
+                <div class="logo-img" style="background-image: url('Floky.png');"></div>
                 <span class="logo-text">Floky</span>
             </div>
-            <div class="theme-toggle" id="themeToggle"><i class="fa-solid fa-moon"></i> <i class="fa-regular fa-sun"></i></div>
+            <div class="theme-toggle" id="themeToggle" onclick="switchTheme()">
+                <i class="fa-solid fa-moon"></i> <i class="fa-regular fa-sun"></i>
+            </div>
         </div>
-
-        <!-- ПОИСК всегда виден -->
-        <div class="search-bar"><i class="fa-solid fa-search"></i><input type="text" placeholder="Поиск в Floky..."></div>
 
         <!-- Истории (декор) -->
         <div class="stories-row">
             <div class="story-item"><i class="fa-solid fa-plus"></i><span>story</span></div>
             <div class="story-item"><i class="fa-solid fa-wolf"></i><span>wolf</span></div>
             <div class="story-item"><i class="fa-regular fa-star"></i><span>night</span></div>
+            <div class="story-item"><i class="fa-solid fa-fire"></i><span>fire</span></div>
         </div>
 
-        <!-- СЕКЦИИ: главная (лента) / library / notice / profile / settings-->
-        <div id="feedSection" class="section active-section"></div>
-        <div id="librarySection" class="section"><div style="color:white; padding:40px;text-align:center;"><i class="fa-regular fa-image fa-3x"></i><p>Library (медитека)</p></div></div>
-        <div id="noticeSection" class="section"></div>
-        <div id="profileSection" class="section"></div>
-        <div id="settingsSection" class="section"></div>
+        <!-- ОСНОВНАЯ ЛЕНТА (direct/library/notice/profile позже) — пока просто лента -->
+        <div id="mainFeed" class="section">
+            <!-- сюда JS генерит 50 постов -->
+        </div>
 
-        <!-- нижнее меню -->
+        <!-- Нижнее меню -->
         <div class="bottom-nav">
-            <div class="nav-item active" data-section="feed"><i class="fa-regular fa-compass"></i><span>Главная</span></div>
+            <div class="nav-item active" data-section="feed"><i class="fa-regular fa-compass"></i><span>Direct</span></div>
             <div class="nav-item" data-section="library"><i class="fa-regular fa-images"></i><span>Library</span></div>
             <div class="nav-item" data-section="notice"><i class="fa-regular fa-bell"></i><span>Notice</span></div>
-            <div class="nav-item" data-section="profile"><i class="fa-regular fa-user"></i><span>Профиль</span></div>
-            <div class="nav-item" data-section="settings"><i class="fa-solid fa-gear"></i><span>Настройки</span></div>
+            <div class="nav-item" data-section="profile"><i class="fa-regular fa-user"></i><span>Profile</span></div>
         </div>
     </div>
 
     <script>
-        (function() {
-            // === ЗАГРУЗКА 3 СЕКУНДЫ ===
-            const splash = document.getElementById('splash');
-            const app = document.getElementById('appContainer');
-            setTimeout(() => {
-                splash.style.opacity = '0';
-                splash.style.visibility = 'hidden';
-                app.classList.add('visible');
-            }, 3000);
+        // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
+        let currentTheme = 'dark'; // dark / light
+        const postsData = [];
+        let commentsStorage = {}; // comment by post index
 
-            // === ТЕМНАЯ/СВЕТЛАЯ ТЕМА ===
-            const themeToggle = document.getElementById('themeToggle');
-            themeToggle.addEventListener('click', () => {
-                document.body.classList.toggle('light-theme');
-                const icon = themeToggle.querySelector('i:first-child');
-                if (document.body.classList.contains('light-theme')) {
-                    icon.className = 'fa-solid fa-sun';
-                } else {
-                    icon.className = 'fa-solid fa-moon';
-                }
-            });
+        // === ТЕМА ===
+        window.switchTheme = function() {
+            const body = document.body;
+            body.classList.toggle('light-theme');
+            const themeIcon = document.querySelector('.theme-toggle i:first-child');
+            if (body.classList.contains('light-theme')) {
+                themeIcon.className = 'fa-solid fa-sun';
+                currentTheme = 'light';
+            } else {
+                themeIcon.className = 'fa-solid fa-moon';
+                currentTheme = 'dark';
+            }
+        };
 
-            // === ДАННЫЕ ===
-            const users = [
-                { name: 'Alex Night', handle: '@alexw', avatar: 'A', followed: false },
-                { name: 'Luna Flare', handle: '@luna_f', avatar: 'L', followed: true },
-                { name: 'Ethan Frost', handle: '@ethanf', avatar: 'E', followed: false },
-                { name: 'Ivy Moon', handle: '@ivym', avatar: 'I', followed: true },
-                { name: 'Cinder Ash', handle: '@cinder', avatar: 'C', followed: false },
-                { name: 'Blaze', handle: '@blaze', avatar: 'B', followed: false }
+        // === ГЕНЕРАЦИЯ 50 ПОСТОВ ===
+        function generateMockPosts() {
+            const wolfHeads = ['fa-solid fa-wolf', 'fa-solid fa-dog', 'fa-solid fa-paw'];
+            const names = ['Alex Wolf', 'Luna Night', 'Ethan Flare', 'Ivy Moon', 'Cinder Ash', 'Blaze Ember', 'Storm Shadow', 'Mist Fable'];
+            const handles = ['@alexw', '@luna', '@ethanf', '@ivym', '@cinder', '@blaze', '@storm', '@mist'];
+            const texts = [
+                'Ночной дозор 🌙✨', 'Волчий вой слышали? 🐺', 'Огонь в душе 🔥', 'Сердце отдаю луне', 'Floky rules!',
+                'Туманный вечер', 'Киберпанк и волки', 'Пламя внутри', 'Сияние ночи', 'Кто тут?',
+                'Фотка с ребятами', 'Хаски обнимаю', 'Новый альбом', 'Бесконечность', 'Скоро новый год',
+                'Релакс', 'Код и кофе', 'Странный сон', 'полярная ночь', 'вьюга'
             ];
-
-            let posts = [];
-            const commentsStorage = {}; // postId -> array
-
-            // Генерация 50 постов (некоторые с видео)
-            function generatePosts() {
-                for (let i = 1; i <= 50; i++) {
-                    const user = users[i % users.length];
-                    const hasVideo = i % 7 === 0;
-                    const media = [];
-                    if (i % 3 === 0) media.push('https://picsum.photos/400/300?random=' + i);
-                    if (i % 5 === 0) media.push('https://picsum.photos/300/400?random=' + (i+50));
-                    if (hasVideo) media.push('https://www.w3schools.com/html/mov_bbb.mp4'); // видео
-
-                    posts.push({
-                        id: i,
-                        user: { ...user },
-                        text: 'Пост #' + i + ' 🌙✨ Добро пожаловать в Floky!',
-                        media: media,
-                        reactions: { wolf: false, fire: false, heart: false },
-                        reactionsCount: { wolf: Math.floor(Math.random()*10), fire: Math.floor(Math.random()*8), heart: Math.floor(Math.random()*12) }
-                    });
-                    commentsStorage[i] = [];
+            const mediaUrls = [
+                'https://picsum.photos/400/300?random=1',
+                'https://picsum.photos/400/300?random=2',
+                'https://picsum.photos/400/400?random=3',
+                'https://picsum.photos/400/260?random=4',
+                'https://picsum.photos/400/280?random=5',
+                'https://picsum.photos/400/320?random=6',
+                'https://picsum.photos/400/300?random=7',
+                'https://picsum.photos/400/300?random=8',
+                // видеозаглушка (стекловое)
+                'https://www.w3schools.com/html/mov_bbb.mp4',
+            ];
+            for (let i = 1; i <= 50; i++) {
+                const nameIdx = i % names.length;
+                const handleIdx = i % handles.length;
+                const textIdx = i % texts.length;
+                const wolfIdx = i % wolfHeads.length;
+                let media = [];
+                // у каждого третьего поста несколько фото
+                if (i % 3 === 0) {
+                    media = [mediaUrls[(i*2) % mediaUrls.length], mediaUrls[(i*3) % mediaUrls.length]];
+                } else if (i % 5 === 0) {
+                    media = [mediaUrls[(i) % mediaUrls.length]]; // видео можно, но для примера
+                } else if (i % 7 === 0) {
+                    media = [mediaUrls[(i+1) % mediaUrls.length], mediaUrls[(i+2) % mediaUrls.length], mediaUrls[(i+3) % mediaUrls.length]];
+                } else {
+                    media = [];
                 }
-            }
-            generatePosts();
 
-            // Функция рендера ленты (главная)
-            function renderFeed() {
-                const feed = document.getElementById('feedSection');
-                if (!feed) return;
-                feed.innerHTML = posts.map((post, idx) => {
-                    const mediaHtml = post.media.length ? post.media.map(url => 
-                        url.includes('.mp4') ? `<video controls src="${url}" poster="https://picsum.photos/400/250?random=99"></video>` : `<img src="${url}" loading="lazy">`
-                    ).join('') : '';
-
-                    const postId = post.id;
-                    const commentsList = (commentsStorage[postId] || []).map(c => `<div class="single-comment"><b>${c.user}</b> ${c.text}</div>`).join('');
-
-                    // Активные классы реакций
-                    const wolfActive = post.reactions.wolf ? 'active-wolf' : '';
-                    const fireActive = post.reactions.fire ? 'active-fire' : '';
-                    const heartActive = post.reactions.heart ? 'active-heart' : '';
-
-                    return `
-                    <div class="post-card" data-post-id="${post.id}">
-                        <div class="post-header">
-                            <div class="post-avatar" onclick="openProfile('${post.user.handle}')">${post.user.avatar}</div>
-                            <div class="post-user-info" onclick="openProfile('${post.user.handle}')">
-                                <div class="name">${post.user.name} <i class="fa-solid fa-check-circle" style="color:#3b82f6; font-size:14px;"></i></div>
-                                <div class="handle">${post.user.handle} • 2ч</div>
-                            </div>
-                            <span class="read-btn" onclick="followUser('${post.user.handle}')">${post.user.followed ? '✔ Читаю' : 'Читать'}</span>
-                            <div class="three-dots" onclick="toggleMenu(this)"><i class="fa-solid fa-ellipsis"></i>
-                                <div class="dots-menu">
-                                    <span><i class="fa-regular fa-flag"></i> Пожаловаться</span>
-                                    <span><i class="fa-solid fa-ban"></i> Заблокировать</span>
-                                    <span><i class="fa-regular fa-bookmark"></i> Запомнить</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="post-text">${post.text}</div>
-                        ${mediaHtml ? `<div class="post-media">${mediaHtml}</div>` : ''}
-                        <div class="reaction-bar">
-                            <div class="reaction-btn ${wolfActive}" data-reaction="wolf" data-postid="${post.id}"><i class="fa-solid fa-wolf"></i> ${post.reactionsCount.wolf}</div>
-                            <div class="reaction-btn ${fireActive}" data-reaction="fire" data-postid="${post.id}"><i class="fa-solid fa-fire"></i> ${post.reactionsCount.fire}</div>
-                            <div class="reaction-btn ${heartActive}" data-reaction="heart" data-postid="${post.id}"><i class="fa-solid fa-heart"></i> ${post.reactionsCount.heart}</div>
-                        </div>
-                        <div class="comment-section">
-                            <div class="comment-box">
-                                <input type="text" placeholder="Комментарий..." id="comment-input-${post.id}">
-                                <button onclick="addComment(${post.id})">💬</button>
-                            </div>
-                            <div class="comments-list" id="comments-${post.id}">${commentsList}</div>
-                        </div>
-                    </div>`;
-                }).join('');
-
-                // навесить события реакций (после рендера)
-                document.querySelectorAll('.reaction-btn').forEach(btn => {
-                    btn.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        const reaction = this.dataset.reaction;
-                        const postId = Number(this.dataset.postid);
-                        const post = posts.find(p => p.id === postId);
-                        if (!post) return;
-
-                        // переключаем состояние
-                        const wasActive = post.reactions[reaction];
-                        post.reactions[reaction] = !wasActive;
-
-                        // изменяем счётчик
-                        if (!wasActive) {
-                            post.reactionsCount[reaction] += 1;
-                        } else {
-                            post.reactionsCount[reaction] -= 1;
-                        }
-
-                        // эффект пламени если fire активно
-                        if (reaction === 'fire' && !wasActive) {
-                            const card = this.closest('.post-card');
-                            card.classList.add('reacted-flame');
-                            setTimeout(() => card.classList.remove('reacted-flame'), 700);
-                        }
-
-                        // обновить UI ленты (перерендерить)
-                        renderFeed();
-                    });
+                postsData.push({
+                    id: i,
+                    name: names[nameIdx],
+                    handle: handles[handleIdx] + i,
+                    avatarLetter: names[nameIdx][0],
+                    text: texts[textIdx] + ' ' + i + ' 🐺✨',
+                    media: media,
+                    reactions: { wolf: Math.floor(Math.random()*30), fire: Math.floor(Math.random()*20), heart: Math.floor(Math.random()*15) },
+                    comments: []
                 });
+                commentsStorage[i] = [];
             }
+        }
 
-            // комментарии
-            window.addComment = function(postId) {
-                const input = document.getElementById(`comment-input-${postId}`);
-                const text = input.value.trim();
-                if (!text) return;
-                if (!commentsStorage[postId]) commentsStorage[postId] = [];
-                commentsStorage[postId].push({ user: 'floky_user', text: text });
-                renderFeed(); // ререндер
-            };
+        // отрисовать все посты в #mainFeed
+        function renderFeed() {
+            const feed = document.getElementById('mainFeed');
+            if (!feed) return;
+            feed.innerHTML = '';
+            postsData.forEach((post, idx) => {
+                const postEl = document.createElement('div');
+                postEl.className = 'post-card';
+                postEl.dataset.index = idx;
+                postEl.dataset.postId = post.id;
+                // реакции
+                const wCount = post.reactions.wolf;
+                const fCount = post.reactions.fire;
+                const hCount = post.reactions.heart;
 
-            // меню
-            window.toggleMenu = function(el) {
-                const menu = el.querySelector('.dots-menu');
-                if (menu) menu.classList.toggle('show');
-            };
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.three-dots')) {
-                    document.querySelectorAll('.dots-menu.show').forEach(m => m.classList.remove('show'));
-                }
-            });
-
-            // подписка/отписка (follow)
-            window.followUser = function(handle) {
-                const user = users.find(u => u.handle === handle);
-                if (user) { user.followed = !user.followed; renderFeed(); }
-            };
-
-            // открыть профиль (переход на профиль)
-            window.openProfile = function(handle) {
-                // показываем секцию профиля с данными
-                const profileDiv = document.getElementById('profileSection');
-                const user = users.find(u => u.handle === handle) || users[0];
-                profileDiv.innerHTML = `
-                    <div class="profile-header">
-                        <div class="profile-avatar">${user.avatar}</div>
-                        <div class="display-name">${user.name} <i class="fa-solid fa-check-circle" style="color:#3b82f6;"></i></div>
-                        <div class="username">${user.handle}</div>
-                        <div class="stats-row"><div class="stat-item"><span>1.2K</span><span>читатели</span></div><div class="stat-item"><span>386</span><span>читаю</span></div><div class="stat-item"><span>50</span><span>посты</span></div></div>
-                        <button class="follow-btn" onclick="followUser('${user.handle}'); openProfile('${user.handle}');">${user.followed ? '✔ Читаю' : 'Читать'}</button>
-                        <button class="new-post-btn" onclick="alert('Новый пост (демо)')"><i class="fa-solid fa-plus"></i> Новый пост</button>
-                    </div>
-                    <div style="padding:16px;color:var(--text-primary)">Последние посты пользователя</div>
-                `;
-                // добавим пару постов только этого юзера
-                const userPosts = posts.filter(p => p.user.handle === user.handle).slice(0,3);
-                userPosts.forEach(p => {
-                    const postDiv = document.createElement('div');
-                    postDiv.className = 'post-card';
-                    postDiv.innerHTML = `<div class="post-text">${p.text} (ещё посты)</div>`;
-                    profileDiv.appendChild(postDiv);
-                });
-
-                // активируем секцию профиля
-                document.querySelectorAll('.section').forEach(s => s.classList.remove('active-section'));
-                profileDiv.classList.add('active-section');
-                // подсветка навигации
-                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-                document.querySelector('[data-section="profile"]').classList.add('active');
-            };
-
-            // === УВЕДОМЛЕНИЯ (notice) ===
-            function renderNotice() {
-                const noticeSec = document.getElementById('noticeSection');
-                noticeSec.innerHTML = `
-                    <div class="notice-item"><i class="fa-regular fa-heart" style="color:#ff69b4;"></i> luna_f оценила ваш пост</div>
-                    <div class="notice-item"><i class="fa-regular fa-comment"></i> alexw комментировал: "круто!"</div>
-                    <div class="notice-item"><i class="fa-regular fa-user"></i> ivym начала читать вас</div>
-                    <div class="notice-item"><i class="fa-regular fa-bell"></i> новое в Floky</div>
-                `;
-            }
-            renderNotice();
-
-            // === НАСТРОЙКИ ===
-            function renderSettings() {
-                document.getElementById('settingsSection').innerHTML = `
-                    <div class="settings-item"><i class="fa-regular fa-moon"></i> Тёмный режим</div>
-                    <div class="settings-item"><i class="fa-regular fa-language"></i> Язык</div>
-                    <div class="settings-item"><i class="fa-regular fa-lock"></i> Приватность</div>
-                    <div class="settings-item"><i class="fa-regular fa-circle-question"></i> Помощь</div>
-                `;
-            }
-            renderSettings();
-
-            // === НАВИГАЦИЯ ===
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    const section = this.dataset.section;
-                    document.querySelectorAll('.section').forEach(s => s.classList.remove('active-section'));
-                    if (section === 'feed') {
-                        document.getElementById('feedSection').classList.add('active-section');
-                        renderFeed(); // обновить ленту
-                    } else if (section === 'library') {
-                        document.getElementById('librarySection').classList.add('active-section');
-                    } else if (section === 'notice') {
-                        document.getElementById('noticeSection').classList.add('active-section');
-                    } else if (section === 'profile') {
-                        // открыть профиль текущего
-                        openProfile('@alexw');
-                        return;
-                    } else if (section === 'settings') {
-                        document.getElementById('settingsSection').classList.add('active-section');
+                // медиа блок
+                let mediaHtml = '';
+                if (post.media.length === 1) {
+                    const url = post.media[0];
+                    if (url.includes('.mp4')) {
+                        mediaHtml = `<video controls src="${url}" poster="https://picsum.photos/400/250?random=99"></video>`;
+                    } else {
+                        mediaHtml = `<img src="${url}" loading="lazy">`;
                     }
+                } else if (post.media.length > 1) {
+                    mediaHtml = '<div class="two-cols">';
+                    post.media.slice(0,2).forEach((url, i) => {
+                        mediaHtml += `<img src="${url}" loading="lazy">`;
+                    });
+                    mediaHtml += '</div>';
+                    if(post.media.length > 2) mediaHtml += '<div>+ещё</div>';
+                }
 
-                    navItems.forEach(n => n.classList.remove('active'));
-                    this.classList.add('active');
+                // комментарии (свернём)
+                const commentId = `comment-${idx}`;
+                const commentsList = (commentsStorage[post.id] || []).map(c => `<div class="single-comment"><b>${c.user}:</b> ${c.text}</div>`).join('');
+
+                const postHtml = `
+                    <div class="post-header">
+                        <div class="avatar">${post.avatarLetter}</div>
+                        <div class="post-user-info">
+                            <div class="name">${post.name} <i class="fa-solid fa-check-circle" style="color:#3b82f6; font-size:14px;"></i></div>
+                            <div class="handle">${post.handle} • 1ч</div>
+                        </div>
+                        <div class="three-dots" onclick="toggleMenu(this)"><i class="fa-solid fa-ellipsis"></i>
+                            <div class="dots-menu">
+                                <span><i class="fa-regular fa-flag"></i> Пожаловаться</span>
+                                <span><i class="fa-solid fa-ban"></i> Заблокировать</span>
+                                <span><i class="fa-regular fa-bookmark"></i> Запомнить</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        <div class="post-text">${post.text}</div>
+                        <div class="media-grid">${mediaHtml}</div>
+                    </div>
+                    <div class="reaction-bar">
+                        <div class="reaction-btn" data-reaction="wolf" data-postidx="${idx}"><i class="fa-solid fa-wolf"></i> <span class="reaction-count">${wCount}</span></div>
+                        <div class="reaction-btn" data-reaction="fire" data-postidx="${idx}"><i class="fa-solid fa-fire"></i> <span class="reaction-count">${fCount}</span></div>
+                        <div class="reaction-btn" data-reaction="heart" data-postidx="${idx}"><i class="fa-solid fa-heart"></i> <span class="reaction-count">${hCount}</span></div>
+                    </div>
+                    <div class="comment-section">
+                        <div class="comment-box">
+                            <input type="text" placeholder="Комментарий..." id="input-${idx}">
+                            <button onclick="addComment(${idx}, ${post.id})">💬</button>
+                        </div>
+                        <div class="comments-list" id="comments-${post.id}">
+                            ${commentsList}
+                        </div>
+                    </div>
+                `;
+                postEl.innerHTML = postHtml;
+                feed.appendChild(postEl);
+            });
+
+            // добавим обработчики реакций
+            document.querySelectorAll('.reaction-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const reaction = this.dataset.reaction;
+                    const postIdx = this.dataset.postidx;
+                    const postCard = this.closest('.post-card');
+                    // увеличиваем счётчик
+                    const countSpan = this.querySelector('.reaction-count');
+                    let val = parseInt(countSpan.innerText);
+                    val += 1;
+                    countSpan.innerText = val;
+
+                    // эффект пламени при fire
+                    if (reaction === 'fire') {
+                        postCard.classList.add('reacted-flame');
+                        setTimeout(() => postCard.classList.remove('reacted-flame'), 800);
+                    }
+                    if (reaction === 'wolf') this.classList.toggle('wolf-active');
+                    if (reaction === 'heart') this.classList.toggle('heart-active');
                 });
             });
+        }
 
-            // кнопка "Главная" (логотип)
-            document.getElementById('homeBtn').addEventListener('click', () => {
-                document.querySelectorAll('.section').forEach(s => s.classList.remove('active-section'));
-                document.getElementById('feedSection').classList.add('active-section');
+        // добавление комментария
+        window.addComment = function(postIdx, postId) {
+            const input = document.getElementById(`input-${postIdx}`);
+            const text = input.value.trim();
+            if (!text) return;
+            if (!commentsStorage[postId]) commentsStorage[postId] = [];
+            commentsStorage[postId].push({ user: 'floky_user', text: text });
+            const commentsDiv = document.getElementById(`comments-${postId}`);
+            const newComment = document.createElement('div');
+            newComment.className = 'single-comment';
+            newComment.innerHTML = `<b>floky_user:</b> ${text}`;
+            commentsDiv.appendChild(newComment);
+            input.value = '';
+        };
+
+        // меню трёх точек
+        window.toggleMenu = function(el) {
+            const menu = el.querySelector('.dots-menu');
+            if (menu) menu.classList.toggle('show');
+        };
+
+        // клик вне меню (упрощённо)
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.three-dots')) {
+                document.querySelectorAll('.dots-menu.show').forEach(m => m.classList.remove('show'));
+            }
+        });
+
+        // === НИЖНЯЯ НАВИГАЦИЯ ===
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', function() {
                 navItems.forEach(n => n.classList.remove('active'));
-                document.querySelector('[data-section="feed"]').classList.add('active');
-                renderFeed();
+                this.classList.add('active');
+                const section = this.dataset.section;
+                // Затычка-заглушка: только футер меняется + сообщение
+                if (section === 'profile') {
+                    showProfilePlaceholder();
+                } else {
+                    // restore feed
+                    document.getElementById('mainFeed').style.display = 'block';
+                    // спрячем профайл если был
+                }
             });
+        });
 
-            // первичный рендер
-            renderFeed();
+        function showProfilePlaceholder() {
+            const feed = document.getElementById('mainFeed');
+            feed.style.display = 'block';
+            feed.innerHTML = `
+                <div class="profile-header">
+                    <div class="profile-avatar"><i class="fa-regular fa-user"></i></div>
+                    <div class="display-name">floky_official <i class="fa-solid fa-check-circle"></i></div>
+                    <div class="username">@floky</div>
+                    <div class="stats-row">
+                        <div class="stat-item"><span>1.2K</span><span>читатели</span></div>
+                        <div class="stat-item"><span>386</span><span>читаю</span></div>
+                        <div class="stat-item"><span>50</span><span>посты</span></div>
+                    </div>
+                    <button class="new-post-btn" onclick="alert('Новый пост (демо)')"><i class="fa-solid fa-plus"></i> Новый пост</button>
+                </div>
+                <div style="color:white; text-align:center; padding:20px;">⋆ библиотека, уведомления ⋆</div>
+            `;
+        }
 
-            // предзаполним профиль по умолчанию при первом клике на профиль (уже)
-        })();
+        // ИНИЦИАЛИЗАЦИЯ
+        generateMockPosts();
+        renderFeed();
+
+        // пара постов с видео (ручное дополнение)
+        // уже есть внутри массива
+
+        // настройка темы при старте
+        if (document.body.classList.contains('light-theme')) {
+            document.querySelector('.theme-toggle i:first-child').className = 'fa-solid fa-sun';
+        }
+
+        console.log('Floky запущен!');
     </script>
 </body>
 </html>
