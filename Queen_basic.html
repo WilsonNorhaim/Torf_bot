@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queen Messenger Prototype</title>
+    <!-- Подключаем стильные иконки Phosphor -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --primary-purple: #8B5CF6; /* Фиолетовый акцент */
+            --primary-purple-hover: #7C3AED;
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.8);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --text-main: #1F2937;
+            --text-secondary: #6B7280;
+            --bg-image: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop');
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: var(--bg-image);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        /* Рамка телефона для презентации */
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 40px;
+            border: 8px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            overflow: hidden;            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- ВЕРХНЯЯ ПАНЕЛЬ --- */
+        .top-bar {
+            height: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            /* Узкая плашечка */
+            margin: 15px;
+            border-radius: 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            z-index: 10;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 20px;
+            color: var(--primary-purple);
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logo i {
+            font-size: 24px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Анимация загрузки */
+        .loader-container {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(139, 92, 246, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-purple);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        .search-icon {
+            font-size: 24px;
+            color: var(--primary-purple);
+            cursor: pointer;
+            display: none; /* Скрыто пока загрузка */
+            transition: transform 0.2s;
+        }
+        
+        .search-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .profile-pic {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-purple);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .profile-pic:hover {
+            transform: scale(1.05);
+        }
+
+        /* --- МЕНЮ ПРОФИЛЯ (МОДАЛЬНОЕ) --- */
+        .profile-menu {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            width: 280px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            padding: 20px;
+            transform: translateY(-20px);
+            opacity: 0;            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .profile-menu.active {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .menu-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            color: var(--text-main);
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .menu-item:hover {
+            color: var(--primary-purple);
+        }
+
+        .menu-item i {
+            font-size: 20px;
+            color: var(--primary-purple);
+        }
+
+        /* --- ОСНОВНОЙ КОНТЕНТ --- */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 15px 20px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            /* Скроллбар скрыт для красоты */
+            scrollbar-width: none;         }
+        .content-area::-webkit-scrollbar { display: none; }
+
+        /* Плашка сторис (опционально) */
+        .stories-panel {
+            height: 90px;
+            border-radius: 24px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 15px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .stories-panel::-webkit-scrollbar { display: none; }
+
+        .story-item {
+            min-width: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .story-ring {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            padding: 2px;
+            background: linear-gradient(45deg, var(--primary-purple), #C084FC);
+        }
+
+        .story-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid white;
+            object-fit: cover;
+            background: #eee;
+        }
+
+        .story-name {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-align: center;
+            max-width: 60px;            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Единая плашка для списка чатов */
+        .chat-list-container {
+            flex: 1;
+            border-radius: 24px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        .chat-list-container::-webkit-scrollbar { display: none; }
+
+        .section-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin: 10px 10px 5px 10px;
+            font-weight: 700;
+        }
+
+        /* Карточка чата */
+        .chat-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chat-card:hover {
+            background: rgba(255, 255, 255, 0.7);
+            transform: translateX(5px);
+        }
+
+        .chat-avatar {
+            width: 50px;            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #ddd;
+            flex-shrink: 0;
+        }
+
+        .chat-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .chat-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-main);
+        }
+
+        .chat-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .chat-preview {
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .chat-preview i {
+            font-size: 14px;
+            color: var(--primary-purple);
+        }
+
+        .unread-badge {
+            background: var(--primary-purple);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Анимации */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Кнопка создания чата (плавающая) */
+        .fab {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary-purple);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: none;
+            outline: none;
+        }
+
+        .fab:hover {
+            transform: scale(1.1) rotate(90deg);
+            background: var(--primary-purple-hover);
+        }
+
+    </style>
+    <script>
+        // Логика загрузки и меню
+        document.addEventListener('DOMContentLoaded', () => {
+            const spinner = document.getElementById('loader');
+            const searchIcon = document.getElementById('search-icon');
+            const profilePic = document.getElementById('profile-pic');
+            const profileMenu = document.getElementById('profile-menu');
+
+            // Имитация загрузки (2 секунды)
+            setTimeout(() => {
+                spinner.style.display = 'none';
+                searchIcon.style.display = 'block';            }, 2000);
+
+            // Открытие/закрытие меню профиля
+            profilePic.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileMenu.classList.toggle('active');
+            });
+
+            // Закрытие меню при клике вне его
+            document.addEventListener('click', (e) => {
+                if (!profileMenu.contains(e.target) && e.target !== profilePic) {
+                    profileMenu.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+
+    <div class="phone-frame">
+        <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+        <div class="top-bar">
+            <div class="logo">
+                <i class="ph ph-crown-simple"></i>
+                Queen
+            </div>
+            <div class="top-actions">
+                <div class="loader-container">
+                    <div class="spinner" id="loader"></div>
+                    <i class="ph ph-magnifying-glass search-icon" id="search-icon"></i>
+                </div>
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" alt="Profile" class="profile-pic" id="profile-pic">
+            </div>
+        </div>
+
+        <!-- МЕНЮ ПРОФИЛЯ (СКРЫТОЕ) -->
+        <div class="profile-menu" id="profile-menu">
+            <div class="menu-header">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" style="width: 40px; height: 40px; border-radius: 50%;" alt="Me">
+                <div>
+                    <div style="font-weight: 700; color: var(--text-main);">Алина</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">@alina_queen</div>
+                </div>
+            </div>
+            <div class="menu-item"><i class="ph ph-user-plus"></i> Найти контакты</div>
+            <div class="menu-item"><i class="ph ph-chats-circle"></i> Новый чат</div>
+            <div class="menu-item"><i class="ph ph-palette"></i> Оформление</div>
+            <div class="menu-item"><i class="ph ph-gear"></i> Настройки</div>
+            <div class="menu-item"><i class="ph ph-sign-out"></i> Выйти</div>
+        </div>
+        <!-- ОСНОВНОЙ КОНТЕНТ -->
+        <div class="content-area">
+            
+            <!-- ПЛАШКА СО СТОРИС -->
+            <div class="stories-panel">
+                <div class="story-item">
+                    <div class="story-ring">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" class="story-img" alt="Story">
+                    </div>
+                    <span class="story-name">Мария</span>
+                </div>
+                <div class="story-item">
+                    <div class="story-ring">
+                        <img src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?q=80&w=200&auto=format&fit=crop" class="story-img" alt="Story">
+                    </div>
+                    <span class="story-name">Олег</span>
+                </div>
+                <div class="story-item">
+                    <div class="story-ring">
+                        <img src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop" class="story-img" alt="Story">
+                    </div>
+                    <span class="story-name">Макс</span>
+                </div>
+                <div class="story-item">
+                    <div class="story-ring" style="background: #ddd; display:flex; align-items:center; justify-content:center;">
+                        <i class="ph ph-plus" style="color: #666; font-size: 24px;"></i>
+                    </div>
+                    <span class="story-name">Моя</span>
+                </div>
+            </div>
+
+            <!-- ЕДИНАЯ ПЛАШКА СПИСКА ЧАТОВ -->
+            <div class="chat-list-container">
+                <div class="section-title">Сообщения</div>
+
+                <!-- Чат 1 -->
+                <div class="chat-card">
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop" class="chat-avatar" alt="User">
+                    <div class="chat-info">
+                        <div class="chat-header">
+                            <span class="chat-name">Дизайн Команда</span>
+                            <span class="chat-time">14:20</span>
+                        </div>
+                        <div class="chat-preview">
+                            <i class="ph ph-image"></i>
+                            <span>Алина: Скинула макеты...</span>
+                        </div>
+                    </div>
+                    <div class="unread-badge">2</div>                </div>
+
+                <!-- Чат 2 -->
+                <div class="chat-card">
+                    <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=200&auto=format&fit=crop" class="chat-avatar" alt="User">
+                    <div class="chat-info">
+                        <div class="chat-header">
+                            <span class="chat-name">Елена Смирнова</span>
+                            <span class="chat-time">Вчера</span>
+                        </div>
+                        <div class="chat-preview">
+                            <span>Привет! Как насчет встречи...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Чат 3 -->
+                <div class="chat-card">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop" class="chat-avatar" alt="User">
+                    <div class="chat-info">
+                        <div class="chat-header">
+                            <span class="chat-name">Рабочий чат</span>
+                            <span class="chat-time">Вчера</span>
+                        </div>
+                        <div class="chat-preview">
+                            <i class="ph ph-doc-text"></i>
+                            <span>Отчет за квартал.pdf</span>
+                        </div>
+                    </div>
+                    <div class="unread-badge">5</div>
+                </div>
+
+                 <!-- Чат 4 -->
+                 <div class="chat-card">
+                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop" class="chat-avatar" alt="User">
+                    <div class="chat-info">
+                        <div class="chat-header">
+                            <span class="chat-name">Иван Техподдержка</span>
+                            <span class="chat-time">Пн</span>
+                        </div>
+                        <div class="chat-preview">
+                            <span>Ваш запрос обработан.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- КНОПКА СОЗДАНИЯ -->
+        <button class="fab">            <i class="ph ph-pencil-simple"></i>
+        </button>
+    </div>
+
+</body>
+</html>
