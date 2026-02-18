@@ -3,677 +3,928 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Queen</title>
+    <title>Floky</title>
     <style>
+        :root {
+            /* Dark Blue Night Theme (Default) */
+            --bg-color: #0f172a;
+            --bg-secondary: #1e293b;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #a855f7; /* Lilac */
+            --accent-glow: rgba(168, 85, 247, 0.4);
+            --danger: #ef4444;
+            --success: #22c55e;
+            --nav-height: 65px;
+            --header-height: 60px;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f1f5f9;
+            --bg-secondary: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(0, 0, 0, 0.05);
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+        }
+
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            padding-bottom: calc(var(--nav-height) + 20px);
+        }
+
+        /* --- Animations --- */        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 5px var(--accent-glow); } 50% { box-shadow: 0 0 20px var(--accent-glow); } 100% { box-shadow: 0 0 5px var(--accent-glow); } }
+        @keyframes fireFlicker { 0% { filter: drop-shadow(0 0 2px #ff9900); } 50% { filter: drop-shadow(0 0 10px #ff4500); } 100% { filter: drop-shadow(0 0 2px #ff9900); } }
+
+        /* --- Loader --- */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color);
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: #1a1b2f; /* тёмный фон для контраста, но у нас будет своё изображение */
-            padding: 12px;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        .loader-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            object-fit: cover;
+            margin-bottom: 20px;
+            animation: pulseGlow 2s infinite;
+            background: #333; /* Fallback */
+        }
+        .loader-text {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: 2px;
         }
 
-        /* Главный экран телефона */
-        .phone {
-            width: 380px;
-            height: 700px;
-            background-image: url('https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=987&auto=format&fit=crop'); /* красивый абстрактный фон */
-            background-size: cover;
-            background-position: center;
-            border-radius: 40px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-            overflow: hidden;
-            position: relative;
-            backdrop-filter: blur(2px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Полупрозрачный слой для читаемости, имитация глубины */
-        .app {
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.1);
+        /* --- Header --- */
+        header {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            height: var(--header-height);
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
             display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        /* ========== СОСТОЯНИЕ 1: ГЛАВНЫЙ ЭКРАН ========== */
-        .main-screen {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            width: 100%;
-            transition: opacity 0.3s ease;
-        }
-
-        /* Верхняя плашка (жидкое стекло) */
-        .top-bar {
-            margin: 12px 16px;
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            transition: opacity 0.2s;
+            justify-content: space-between;
+            padding: 0 15px;
+            z-index: 1000;
         }
 
-        .logo {
+        .logo-area {
+            display: flex;            align-items: center;
+            gap: 10px;
             font-weight: 700;
             font-size: 20px;
-            letter-spacing: 0.5px;
-            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--text-primary);
+            cursor: pointer;
         }
-
-        .top-icons {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-
-        .icon {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #4c1d95;
-            font-weight: 500;
-            filter: drop-shadow(0 2px 4px rgba(139, 92, 246, 0.2));
-        }
-
-        .spinner {
-            animation: spin 1.5s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .avatar-small {
+        .logo-area img {
             width: 32px;
             height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #8b5cf6, #c084fc);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+            border-radius: 8px;
         }
 
-        /* Плашка историй (жидкое стекло) */
-        .stories {
-            margin: 8px 16px 16px;
-            padding: 16px 12px;
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            display: flex;
-            gap: 16px;
-            overflow-x: auto;
-            scrollbar-width: none;
-        }
-
-        .stories::-webkit-scrollbar {
-            display: none;
-        }
-
-        .story-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-
-        .story-avatar {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #8b5cf6, #c084fc);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            border: 3px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .story-avatar.add {
-            background: rgba(139, 92, 246, 0.4);
-            border: 2px dashed #8b5cf6;
-            color: #8b5cf6;
-        }
-
-        .story-name {
-            font-size: 12px;
-            color: #1f1f3a;
-            font-weight: 500;
-            text-shadow: 0 1px 2px rgba(255,255,255,0.5);
-        }
-
-        /* Список чатов */
-        .chats-list {
+        .search-bar {
             flex: 1;
-            overflow-y: auto;
-            padding: 0 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            scrollbar-width: none;
-        }
-
-        .chats-list::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* Карточка чата — жидкое стекло, отдельная плашка */
-        .chat-card {
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
-            cursor: pointer;
-            margin-bottom: 4px;
-        }
-
-        .chat-avatar {
-            width: 54px;
-            height: 54px;
-            border-radius: 18px; /* чуть скруглённые, но можно и круг */
-            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 20px;
-            flex-shrink: 0;
-            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
-        }
-
-        .chat-info {
-            flex: 1;
-        }
-
-        .chat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 6px;
-        }
-
-        .chat-name {
-            font-weight: 700;
-            color: #2e1065;
-            font-size: 16px;
-        }
-
-        .chat-time {
-            font-size: 12px;
-            color: #4c1d95;
-            opacity: 0.7;
-            font-weight: 500;
-        }
-
-        .chat-preview {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .chat-message {
-            color: #2e1065;
-            opacity: 0.8;
-            font-size: 14px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 180px;
-        }
-
-        .badge {
-            background: #8b5cf6;
-            color: white;
-            border-radius: 30px;
-            padding: 4px 10px;
-            font-size: 12px;
-            font-weight: 600;
-            box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
-        }
-
-        .check {
-            color: #8b5cf6;
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        /* ========== СОСТОЯНИЕ 2: ОТКРЫТЫЙ ЧАТ ========== */
-        .chat-screen {
-            display: none;
-            flex-direction: column;
-            height: 100%;
-            width: 100%;
+            margin: 0 15px;
             position: relative;
         }
-
-        /* Шапка чата (выезжает сверху, без Queen) */
-        .chat-header-bar {
-            margin: 12px 16px 8px;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        .search-bar input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            outline: none;
+            font-size: 14px;
         }
 
-        .back-button {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(139, 92, 246, 0.2);
+        .header-actions button {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        /* --- Views --- */
+        .view {
+            display: none;
+            padding-top: calc(var(--header-height) + 10px);
+            animation: fadeIn 0.3s ease;
+            min-height: 100vh;
+        }
+        .view.active {
+            display: block;
+        }
+
+        /* --- Posts Feed --- */        .feed-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 10px;
+        }
+
+        .post-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .post-card.fire-active {
+            animation: fireFlicker 0.5s ease-in-out;
+            border-color: #ff4500;
+        }
+
+        .post-header {
+            padding: 12px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
+        }
+        .post-author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent);
+        }
+        .author-info h4 {
+            margin: 0;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .verified {
+            color: #3b82f6;
+            width: 14px;
+            height: 14px;        }
+        .author-info span {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .post-menu-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .post-content {
+            padding: 0 12px 12px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .post-media {
+            width: 100%;
+            background: #000;
+            display: block;
+        }
+        .post-media img, .post-media video {
+            width: 100%;
+            display: block;
+            max-height: 500px;
+            object-fit: cover;
+        }
+
+        .post-actions {
+            padding: 10px 12px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s, transform 0.1s;
+        }
+        .action-btn:active { transform: scale(0.9); }
+        .action-btn.liked { color: #ef4444; }        .action-btn.wolf-active { color: #a855f7; }
+        
+        .reaction-count {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .comments-section {
+            background: rgba(0,0,0,0.1);
+            padding: 10px 12px;
+            display: none;
+        }
+        .comments-section.open { display: block; }
+        .comment {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .comment-input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .comment-input-area input {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: none;
+            border-radius: 20px;
+            padding: 8px 15px;
+            color: var(--text-primary);
+            outline: none;
+        }
+
+        /* --- Profile View --- */
+        .profile-header {
+            text-align: center;
+            padding: 20px;
+        }
+        .profile-pic-lg {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            margin-bottom: 10px;
+        }
+        .stats-row {
+            display: flex;
             justify-content: center;
-            font-size: 18px;
-            color: #5b21b6;
+            gap: 20px;            margin: 15px 0;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-num { font-weight: 700; font-size: 18px; }
+        .stat-label { font-size: 12px; color: var(--text-secondary); }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-primary);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
         }
 
-        .chat-header-info {
-            flex: 1;
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
         }
-
-        .chat-header-name {
-            font-weight: 700;
-            color: #2e1065;
-            font-size: 16px;
+        .grid-item {
+            aspect-ratio: 1;
+            background: #333;
+            overflow: hidden;
         }
+        .grid-item img { width: 100%; height: 100%; object-fit: cover; }
 
-        .chat-header-status {
-            font-size: 12px;
-            color: #059669;
-            font-weight: 500;
+        /* --- Bottom Nav --- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; width: 100%;
+            height: var(--nav-height);
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--glass-border);            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
         }
-
-        .chat-header-actions {
-            display: flex;
-            gap: 16px;
-            color: #5b21b6;
-        }
-
-        /* История сообщений (та же раскрытая карточка) */
-        .messages-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 16px;
+        .nav-item {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin: 8px 0;
-        }
-
-        .message {
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 22px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            padding: 12px 16px;
-            max-width: 80%;
-            align-self: flex-start;
-            color: #1e1b4b;
-            font-size: 14px;
-        }
-
-        .message.own {
-            align-self: flex-end;
-            background: rgba(139, 92, 246, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            color: white;
-        }
-
-        /* Нижняя плашка с вводом — ПОЯВЛЯЕТСЯ ТОЛЬКО ТУТ */
-        .chat-input-bar {
-            margin: 8px 16px 16px;
-            padding: 10px 16px;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            display: flex;
             align-items: center;
-            gap: 12px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            color: var(--text-secondary);
+            font-size: 10px;
+            gap: 4px;
+            cursor: pointer;
+            transition: color 0.2s;
         }
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 22px; }
 
-        .input-field {
+        /* --- Modals --- */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: flex-end; /* Sheet style */
+        }
+        .modal.open { display: flex; }
+        
+        .modal-content {
+            background: var(--bg-secondary);
+            width: 100%;
+            max-width: 600px;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            animation: slideUp 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .close-modal {
+            background: none; border: none; color: var(--text-secondary); font-size: 24px;        }
+
+        /* --- Create Post --- */
+        .create-post-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .tab-btn {
             flex: 1;
-            background: rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 30px;
-            padding: 10px 16px;
-            font-size: 14px;
+            padding: 8px;
+            background: rgba(255,255,255,0.05);
+            border: none;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .tab-btn.active { background: var(--accent); color: white; }
+        
+        textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.2);
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            color: var(--text-primary);
+            resize: none;
+            height: 100px;
+            font-family: inherit;
             outline: none;
-            color: #2e1065;
         }
 
-        .input-field::placeholder {
-            color: #6d4a9e;
-            opacity: 0.7;
-        }
-
-        .media-icons {
+        /* --- Notice --- */
+        .notice-item {
             display: flex;
-            gap: 16px;
-            color: #8b5cf6;
-            font-size: 22px;
             align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .notice-icon {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        /* --- Custom Video Player Controls (Hidden default) --- */
+        video::-webkit-media-controls { display:none !important; }
+        .video-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 40px;
+            pointer-events: none;
+            opacity: 0.8;
         }
 
-        .media-icons span {
-            cursor: default;
-            filter: drop-shadow(0 2px 4px rgba(139, 92, 246, 0.4));
-        }
-
-        /* Анимация раскрытия */
-        .chat-card.opened {
-            /* эти стили применятся при открытии через JS */
-        }
-
-        /* скрыть сторис и верхнюю плашку при открытом чате — будет управлять js */
-        .hidden {
-            display: none !important;
-        }
     </style>
 </head>
 <body>
-    <div class="phone">
-        <div class="app">
-            <!-- ГЛАВНЫЙ ЭКРАН (ЛЕНТА) -->
-            <div id="mainScreen" class="main-screen">
-                <div class="top-bar">
-                    <span class="logo">Queen</span>
-                    <div class="top-icons">
-                        <span class="icon spinner" id="spinnerIcon">⭮</span>
-                        <span class="icon" id="searchIcon" style="display: none;">🔍</span>
-                        <div class="avatar-small">Q</div>
-                    </div>
-                </div>
 
-                <div class="stories" id="storiesBlock">
-                    <div class="story-item">
-                        <div class="story-avatar add">+</div>
-                        <span class="story-name">Добавить</span>
-                    </div>
-                    <div class="story-item">
-                        <div class="story-avatar">А</div>
-                        <span class="story-name">Аня</span>
-                    </div>
-                    <div class="story-item">
-                        <div class="story-avatar">Б</div>
-                        <span class="story-name">Боб</span>
-                    </div>
-                    <div class="story-item">
-                        <div class="story-avatar">В</div>
-                        <span class="story-name">Вы</span>
-                    </div>
-                </div>
+    <!-- Loader -->
+    <div id="loader">
+        <img src="Floky.png" alt="Floky Logo" class="loader-logo" onerror="this.src='https://placehold.co/100x100/a855f7/ffffff?text=F'">
+        <div class="loader-text">FLOKY</div>
+    </div>
 
-                <div class="chats-list" id="chatsList">
-                    <!-- Карточка чата 1 (Иван) -->
-                    <div class="chat-card" id="chat1" data-chat-id="ivan">
-                        <div class="chat-avatar">И</div>
-                        <div class="chat-info">
-                            <div class="chat-header">
-                                <span class="chat-name">Иван</span>
-                                <span class="chat-time">16:42</span>
-                            </div>
-                            <div class="chat-preview">
-                                <span class="chat-message">Привет! Как дела?</span>
-                                <span class="badge">2</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Карточка чата 2 (Анна) -->
-                    <div class="chat-card" id="chat2" data-chat-id="anna">
-                        <div class="chat-avatar">А</div>
-                        <div class="chat-info">
-                            <div class="chat-header">
-                                <span class="chat-name">Анна</span>
-                                <span class="chat-time">15:20</span>
-                            </div>
-                            <div class="chat-preview">
-                                <span class="chat-message">Фото</span>
-                                <span class="check">✓</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Карточка чата 3 (Команда) -->
-                    <div class="chat-card" id="chat3" data-chat-id="team">
-                        <div class="chat-avatar">К</div>
-                        <div class="chat-info">
-                            <div class="chat-header">
-                                <span class="chat-name">Команда</span>
-                                <span class="chat-time">12:08</span>
-                            </div>
-                            <div class="chat-preview">
-                                <span class="chat-message">Встреча сегодня?</span>
-                                <span class="badge">5</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Карточка чата 4 (Мама) -->
-                    <div class="chat-card" id="chat4" data-chat-id="mom">
-                        <div class="chat-avatar">М</div>
-                        <div class="chat-info">
-                            <div class="chat-header">
-                                <span class="chat-name">Мама</span>
-                                <span class="chat-time">11:02</span>
-                            </div>
-                            <div class="chat-preview">
-                                <span class="chat-message">Голосовое сообщение</span>
-                                <span class="icon">⏺</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <!-- Header -->
+    <header>
+        <div class="logo-area" onclick="navigateTo('home')">
+            <img src="Floky.png" alt="Logo" onerror="this.src='https://placehold.co/50x50/a855f7/ffffff?text=F'">
+            <span>Floky</span>
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Поиск...">
+        </div>
+        <div class="header-actions">
+            <button onclick="toggleTheme()">🌗</button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="app">
+        
+        <!-- HOME VIEW -->
+        <div id="view-home" class="view active">
+            <div class="feed-container" id="feed">
+                <!-- Posts injected by JS -->
             </div>
+        </div>
 
-            <!-- ЭКРАН ЧАТА (ОТКРЫТЫЙ) -->
-            <div id="chatScreen" class="chat-screen">
-                <!-- Шапка чата (без Queen) -->
-                <div class="chat-header-bar" id="chatHeader">
-                    <div class="back-button" id="backButton">←</div>
-                    <div class="chat-header-info">
-                        <div class="chat-header-name" id="chatHeaderName">Иван</div>
-                        <div class="chat-header-status">онлайн</div>
-                    </div>
-                    <div class="chat-header-actions">
-                        <span>📞</span>
-                        <span>ℹ️</span>
+        <!-- DIRECT VIEW -->
+        <div id="view-direct" class="view">
+            <div class="feed-container">                <h2 style="padding: 10px;">Сообщения</h2>
+                <div class="notice-item">
+                    <img src="https://i.pravatar.cc/100?img=1" class="avatar">
+                    <div>
+                        <h4>Alex Wolf</h4>
+                        <p style="color:var(--text-secondary); margin:0;">Привет! Как дела?</p>
                     </div>
                 </div>
-
-                <!-- Сообщения (раскрытая карточка) -->
-                <div class="messages-container" id="messagesContainer">
-                    <div class="message">Привет! Как дела?</div>
-                    <div class="message own">Нормально, а у тебя?</div>
-                    <div class="message">Тоже всё отлично! 😊</div>
-                    <div class="message">Слушай, есть идея для проекта</div>
-                    <div class="message own">Давай, рассказывай</div>
-                </div>
-
-                <!-- Нижняя плашка с вводом (медиа-иконки: скрепка, микрофон, +) -->
-                <div class="chat-input-bar">
-                    <span class="input-field" contenteditable="true" role="textbox" placeholder="Напишите сообщение..."></span>
-                    <div class="media-icons">
-                        <span>📎</span> <!-- скрепка -->
-                        <span>+</span>  <!-- плюс/медиа -->
-                        <span>🎤</span> <!-- микрофон -->
+                <div class="notice-item">
+                    <img src="https://i.pravatar.cc/100?img=5" class="avatar">
+                    <div>
+                        <h4>Maria Sky</h4>
+                        <p style="color:var(--text-secondary); margin:0;">Скинь фотки с вечеринки</p>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- LIBRARY VIEW -->
+        <div id="view-library" class="view">
+            <div class="feed-container">
+                <h2 style="padding: 10px;">Закладки</h2>
+                <div class="profile-grid" id="library-grid">
+                    <!-- Saved posts -->
+                </div>
+            </div>
+        </div>
+
+        <!-- NOTICE VIEW -->
+        <div id="view-notice" class="view">
+            <div class="feed-container">
+                <h2 style="padding: 10px;">Уведомления</h2>
+                <div class="notice-item">
+                    <div class="notice-icon">🐺</div>
+                    <div>
+                        <h4>WolfPack</h4>
+                        <p style="color:var(--text-secondary); margin:0;">Понравился ваш пост</p>
+                    </div>
+                </div>
+                <div class="notice-item">
+                    <div class="notice-icon">❤️</div>
+                    <div>
+                        <h4>Anna_K</h4>
+                        <p style="color:var(--text-secondary); margin:0;">Прокомментировала: "Круто!"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFILE VIEW -->        <div id="view-profile" class="view">
+            <div class="profile-header">
+                <img src="https://i.pravatar.cc/150?img=12" class="profile-pic-lg" id="my-profile-pic">
+                <h2 id="my-profile-name">Alex Wolf <span class="verified">✔</span></h2>
+                <p style="color:var(--text-secondary)">@alex_wolf</p>
+                
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <div class="stat-num">1.2k</div>
+                        <div class="stat-label">Читатели</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num">450</div>
+                        <div class="stat-label">Читаю</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num">84</div>
+                        <div class="stat-label">Посты</div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="openModal('create-post-modal')">Новый пост</button>
+                <button class="btn-secondary" onclick="openModal('settings-modal')">Настройки</button>
+            </div>
+            <div class="profile-grid">
+                <!-- User posts grid -->
+                <div class="grid-item"><img src="https://picsum.photos/300/300?random=1"></div>
+                <div class="grid-item"><img src="https://picsum.photos/300/300?random=2"></div>
+                <div class="grid-item"><img src="https://picsum.photos/300/300?random=3"></div>
+            </div>
+        </div>
+
+        <!-- OTHER USER PROFILE (Dynamic) -->
+        <div id="view-other-profile" class="view">
+            <div class="profile-header">
+                <button class="btn-secondary" style="width:auto; margin-bottom:10px;" onclick="navigateTo('home')">← Назад</button>
+                <img src="" class="profile-pic-lg" id="other-profile-pic">
+                <h2 id="other-profile-name">User Name</h2>
+                <p style="color:var(--text-secondary)" id="other-profile-handle">@handle</p>
+                <div class="stats-row">
+                    <div class="stat-item"><div class="stat-num" id="other-followers">0</div><div class="stat-label">Читатели</div></div>
+                    <div class="stat-item"><div class="stat-num" id="other-posts">0</div><div class="stat-label">Посты</div></div>
+                </div>
+                <button class="btn-primary">Подписаться</button>
+            </div>
+            <div class="profile-grid" id="other-profile-grid"></div>
+        </div>
+
+    </main>
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="navigateTo('home')" id="nav-home">
+            <div class="nav-icon">🏠</div>
+            <span>Главная</span>
+        </div>
+        <div class="nav-item" onclick="navigateTo('direct')" id="nav-direct">
+            <div class="nav-icon">✉️</div>
+            <span>Direct</span>
+        </div>
+        <div class="nav-item" onclick="navigateTo('library')" id="nav-library">
+            <div class="nav-icon">📚</div>
+            <span>Library</span>
+        </div>
+        <div class="nav-item" onclick="navigateTo('notice')" id="nav-notice">
+            <div class="nav-icon">🔔</div>
+            <span>Notice</span>
+        </div>
+        <div class="nav-item" onclick="navigateTo('profile')" id="nav-profile">
+            <div class="nav-icon">👤</div>
+            <span>Profile</span>
+        </div>
+    </nav>
+
+    <!-- Create Post Modal -->
+    <div id="create-post-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Создать пост</h3>
+                <button class="close-modal" onclick="closeModal('create-post-modal')">×</button>
+            </div>
+            <div class="create-post-tabs">
+                <button class="tab-btn active" onclick="setPostType('text')">Текст</button>
+                <button class="tab-btn" onclick="setPostType('image')">Фото</button>
+                <button class="tab-btn" onclick="setPostType('video')">Видео</button>
+            </div>
+            <textarea id="new-post-text" placeholder="О чем думаешь?"></textarea>
+            <div id="media-preview" style="margin: 10px 0; display:none;">
+                <img src="" id="preview-img" style="width:100%; border-radius:10px;">
+            </div>
+            <button class="btn-primary" onclick="publishPost()">Опубликовать</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Настройки</h3>
+                <button class="close-modal" onclick="closeModal('settings-modal')">×</button>            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                <span>Темная тема</span>
+                <button class="btn-secondary" onclick="toggleTheme()">Переключить</button>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                <span>Уведомления</span>
+                <button class="btn-secondary" style="background:var(--accent)">Вкл</button>
+            </div>
+            <button class="btn-primary" style="background:var(--danger)" onclick="alert('Выход...')">Выйти</button>
+        </div>
+    </div>
+
+    <!-- Post Options Menu -->
+    <div id="post-options-modal" class="modal">
+        <div class="modal-content" style="height: auto;">
+            <div class="modal-header">
+                <h3>Действия</h3>
+                <button class="close-modal" onclick="closeModal('post-options-modal')">×</button>
+            </div>
+            <button class="btn-secondary" style="width:100%; margin-bottom:10px; text-align:left;">🔖 В закладки</button>
+            <button class="btn-secondary" style="width:100%; margin-bottom:10px; text-align:left;">🚫 Заблокировать</button>
+            <button class="btn-secondary" style="width:100%; margin-bottom:10px; text-align:left; color:var(--danger)">⚠️ Пожаловаться</button>
+        </div>
     </div>
 
     <script>
-        (function() {
-            // Элементы
-            const mainScreen = document.getElementById('mainScreen');
-            const chatScreen = document.getElementById('chatScreen');
-            const chatsList = document.getElementById('chatsList');
-            const backButton = document.getElementById('backButton');
-            const spinnerIcon = document.getElementById('spinnerIcon');
-            const searchIcon = document.getElementById('searchIcon');
-            const storiesBlock = document.getElementById('storiesBlock');
-            const topBar = document.querySelector('.top-bar'); // верхняя плашка Queen
+        // --- State & Data ---
+        let currentTheme = 'dark';
+        let posts = [];
+        const currentUser = {
+            name: "Alex Wolf",
+            handle: "@alex_wolf",
+            avatar: "https://i.pravatar.cc/150?img=12",
+            verified: true
+        };
 
-            // Имитация загрузки: спиннер 2 секунды, потом появляется лупа
+        // --- Init ---
+        window.addEventListener('load', () => {
             setTimeout(() => {
-                spinnerIcon.style.display = 'none';
-                searchIcon.style.display = 'inline-block';
-            }, 2000);
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                }, 500);
+            }, 3000); // 3 sec loader
 
-            // Функция открытия чата
-            function openChat(chatCard, chatName) {
-                // Скрываем главный экран (верхнюю плашку и истории скроются вместе с mainScreen)
-                mainScreen.classList.add('hidden');
-                mainScreen.style.display = 'none';
-                
-                // Показываем экран чата
-                chatScreen.style.display = 'flex';
-                
-                // Обновим имя в шапке чата (для разнообразия)
-                const headerName = document.getElementById('chatHeaderName');
-                if (headerName) {
-                    headerName.textContent = chatName;
+            generatePosts(50);
+            renderFeed();
+        });
+        // --- Theme ---
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            closeModal('settings-modal');
+        }
+
+        // --- Navigation ---
+        function navigateTo(viewId) {
+            // Hide all views
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            // Show target
+            const target = document.getElementById(`view-${viewId}`);
+            if(target) target.classList.add('active');
+
+            // Highlight Nav
+            const nav = document.getElementById(`nav-${viewId}`);
+            if(nav) nav.classList.add('active');
+            
+            window.scrollTo(0,0);
+        }
+
+        // --- Post Generation ---
+        function generatePosts(count) {
+            const types = ['text', 'image', 'video'];
+            const texts = [
+                "Всем привет! Как ваше настроение сегодня? 🌙",
+                "Новый трек уже в библиотеке, зацените!",
+                "Прогулка по ночному городу... 🌃",
+                "Кто идет на концерт в субботу?",
+                "Просто красивое фото для ленты.",
+                "Floky - лучшая соцсеть! 🔥",
+                "Утро доброе, друзья!",
+                "Смотрите, какой кот!",
+                "Работаю над новым проектом.",
+                "Всем хорошего дня!"
+            ];
+
+            for (let i = 0; i < count; i++) {
+                const type = types[Math.floor(Math.random() * types.length)];
+                let mediaSrc = '';
+                if (type === 'image') mediaSrc = `https://picsum.photos/600/400?random=${i}`;
+                if (type === 'video') mediaSrc = `https://www.w3schools.com/html/mov_bbb.mp4`; // Stock video
+
+                posts.push({
+                    id: i,
+                    author: i === 0 ? currentUser : {
+                        name: `User ${i}`,                        handle: `@user${i}`,
+                        avatar: `https://i.pravatar.cc/100?img=${i % 50}`,
+                        verified: Math.random() > 0.8
+                    },
+                    content: texts[i % texts.length],
+                    type: type,
+                    media: mediaSrc,
+                    likes: Math.floor(Math.random() * 500),
+                    comments: Math.floor(Math.random() * 50),
+                    isLiked: false,
+                    isWolfed: false
+                });
+            }
+        }
+
+        function renderFeed() {
+            const container = document.getElementById('feed');
+            container.innerHTML = '';
+            
+            posts.forEach(post => {
+                const card = document.createElement('div');
+                card.className = 'post-card';
+                card.id = `post-${post.id}`;
+
+                let mediaHTML = '';
+                if (post.type === 'image') {
+                    mediaHTML = `<div class="post-media"><img src="${post.media}" loading="lazy"></div>`;
+                } else if (post.type === 'video') {
+                    mediaHTML = `
+                        <div class="post-media" style="position:relative;">
+                            <video src="${post.media}" onclick="togglePlay(this)"></video>
+                            <div class="video-overlay" onclick="togglePlay(this.previousElementSibling)">▶</div>
+                        </div>`;
                 }
 
-                // Небольшая анимация: можно добавить класс для плавности
-                chatScreen.style.animation = 'fadeIn 0.3s';
+                card.innerHTML = `
+                    <div class="post-header">
+                        <div class="post-author" onclick="openUserProfile(${post.id})">
+                            <img src="${post.author.avatar}" class="avatar">
+                            <div class="author-info">
+                                <h4>${post.author.name} ${post.author.verified ? '<span class="verified">✔</span>' : ''}</h4>
+                                <span>${post.author.handle}</span>
+                            </div>
+                        </div>
+                        <button class="post-menu-btn" onclick="openPostMenu(${post.id})">⋮</button>
+                    </div>
+                    <div class="post-content">${post.content}</div>
+                    ${mediaHTML}
+                    <div class="post-actions">
+                        <button class="action-btn wolf-btn ${post.isWolfed ? 'wolf-active' : ''}" onclick="toggleReaction(${post.id}, 'wolf')">                            🐺 <span class="reaction-count">${post.likes}</span>
+                        </button>
+                        <button class="action-btn" onclick="toggleComments(${post.id})">
+                            💬 ${post.comments}
+                        </button>
+                        <button class="action-btn share-btn" onclick="alert('Ссылка скопирована!')">
+                            🔗
+                        </button>
+                    </div>
+                    <div class="comments-section" id="comments-${post.id}">
+                        <div class="comment">
+                            <img src="https://i.pravatar.cc/50?img=33" class="avatar" style="width:30px;height:30px;">
+                            <div><b>Fan123</b> Крутой пост! 🔥</div>
+                        </div>
+                        <div class="comment-input-area">
+                            <input type="text" placeholder="Комментарий...">
+                            <button style="background:none;border:none;color:var(--accent);font-weight:bold;">Send</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- Interactions ---
+        function toggleReaction(postId, type) {
+            const post = posts.find(p => p.id === postId);
+            const card = document.getElementById(`post-${postId}`);
+            const btn = card.querySelector('.wolf-btn');
+            const countSpan = btn.querySelector('.reaction-count');
+
+            if (type === 'wolf') {
+                if (post.isWolfed) {
+                    post.isWolfed = false;
+                    post.likes--;
+                    btn.classList.remove('wolf-active');
+                    card.classList.remove('fire-active');
+                } else {
+                    post.isWolfed = true;
+                    post.likes++;
+                    btn.classList.add('wolf-active');
+                    // Fire effect
+                    card.classList.add('fire-active');
+                    setTimeout(() => card.classList.remove('fire-active'), 500);
+                }
+                countSpan.innerText = post.likes;
+            }
+        }
+
+        function toggleComments(postId) {            const section = document.getElementById(`comments-${postId}`);
+            section.classList.toggle('open');
+        }
+
+        function openPostMenu(postId) {
+            openModal('post-options-modal');
+        }
+
+        // --- Video Player ---
+        function togglePlay(video) {
+            if (video.paused) {
+                video.play();
+                video.nextElementSibling.style.opacity = '0'; // Hide play icon
+            } else {
+                video.pause();
+                video.nextElementSibling.style.opacity = '0.8';
+            }
+        }
+
+        // --- Modals ---
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+
+        // --- Create Post Logic ---
+        let currentPostType = 'text';
+        function setPostType(type) {
+            currentPostType = type;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const preview = document.getElementById('media-preview');
+            const img = document.getElementById('preview-img');
+            
+            if (type === 'text') {
+                preview.style.display = 'none';
+            } else if (type === 'image') {
+                preview.style.display = 'block';
+                img.src = `https://picsum.photos/300/200?random=${Math.random()}`;
+                img.style.display = 'block';
+            } else if (type === 'video') {
+                preview.style.display = 'block';
+                img.src = 'https://placehold.co/300x200/000000/FFF?text=Video+Preview'; // Placeholder for video
+                img.style.display = 'block';
+            }
+        }
+        function publishPost() {
+            const text = document.getElementById('new-post-text').value;
+            if (!text) return alert('Введите текст!');
+
+            const newPost = {
+                id: Date.now(),
+                author: currentUser,
+                content: text,
+                type: currentPostType,
+                media: currentPostType === 'image' ? document.getElementById('preview-img').src : (currentPostType === 'video' ? 'https://www.w3schools.com/html/mov_bbb.mp4' : ''),
+                likes: 0,
+                comments: 0,
+                isLiked: false,
+                isWolfed: false
+            };
+
+            posts.unshift(newPost); // Add to top
+            renderFeed();
+            closeModal('create-post-modal');
+            document.getElementById('new-post-text').value = '';
+            navigateTo('home');
+        }
+
+        // --- User Profile Navigation ---
+        function openUserProfile(postId) {
+            const post = posts.find(p => p.id === postId);
+            const user = post.author;
+            
+            // Populate Other Profile View
+            document.getElementById('other-profile-pic').src = user.avatar;
+            document.getElementById('other-profile-name').innerText = user.name + (user.verified ? ' ✔' : '');
+            document.getElementById('other-profile-handle').innerText = user.handle;
+            document.getElementById('other-followers').innerText = Math.floor(Math.random() * 5000);
+            document.getElementById('other-posts').innerText = Math.floor(Math.random() * 200);
+            
+            // Generate grid for them
+            const grid = document.getElementById('other-profile-grid');
+            grid.innerHTML = '';
+            for(let k=0; k<9; k++) {
+                grid.innerHTML += `<div class="grid-item"><img src="https://picsum.photos/300/300?random=${postId+k}"></div>`;
             }
 
-            // Функция закрытия чата (возврат на главный экран)
-            function closeChat() {
-                chatScreen.style.display = 'none';
-                mainScreen.style.display = 'flex'; // покажем главный экран
-                mainScreen.classList.remove('hidden');
-            }
+            navigateTo('other-profile');
+        }
 
-            // Навешиваем обработчики на карточки чатов
-            const chatCards = document.querySelectorAll('.chat-card');
-            chatCards.forEach(card => {
-                card.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    // Получим имя чата из DOM
-                    const nameElement = card.querySelector('.chat-name');
-                    const chatName = nameElement ? nameElement.textContent : 'Чат';
-                    openChat(card, chatName);
-                });
-            });
-
-            // Кнопка "назад" в чате
-            backButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                closeChat();
-            });
-
-            // Начальное состояние: главный экран виден, чат скрыт
-            chatScreen.style.display = 'none';
-            mainScreen.style.display = 'flex';
-
-            // Демо: по клику на аватарку (имитация открытия меню профиля — просто алерт)
-            document.querySelector('.avatar-small').addEventListener('click', () => {
-                alert('Здесь было бы меню профиля: настройки, профили, поиск контактов — всё в одном месте');
-            });
-
-            // Демо: лупа (поиск)
-            searchIcon.addEventListener('click', () => {
-                alert('Поиск по чатам (можно реализовать выдвижную строку)');
-            });
-
-            // Дополнительная имитация: переключение спиннер/лупа уже сделано
-        })();
     </script>
-
-    <style>
-        /* Дополнительная анимация и корректировки */
-        .hidden {
-            display: none !important;
-        }
-        .chat-screen {
-            display: none;
-        }
-        #mainScreen {
-            display: flex;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0.5; transform: scale(0.98); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .chat-card {
-            transition: all 0.2s ease;
-        }
-        .chat-card:active {
-            transform: scale(0.98);
-            background: rgba(255, 255, 255, 0.7);
-        }
-        .back-button {
-            cursor: pointer;
-        }
-        .input-field:empty:before {
-            content: attr(placeholder);
-            color: #aaa;
-        }
-        .input-field:focus {
-            border-color: #8b5cf6;
-            background: rgba(255,255,255,0.8);
-        }
-        .story-avatar, .chat-avatar {
-            text-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-    </style>
-
-    <!-- Пояснение: в открытом чате нет верхней плашки Queen, только шапка чата.
-    Нижняя плашка содержит иконки: скрепка, +, микрофон (можно заменить на свои) -->
 </body>
 </html>
