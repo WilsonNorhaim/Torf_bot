@@ -1,930 +1,579 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Floky</title>
-    <style>
-        :root {
-            /* Dark Blue Night Theme (Default) */
-            --bg-color: #0f172a;
-            --bg-secondary: #1e293b;
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent: #a855f7; /* Lilac */
-            --accent-glow: rgba(168, 85, 247, 0.4);
-            --danger: #ef4444;
-            --success: #22c55e;
-            --nav-height: 65px;
-            --header-height: 60px;
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Floky Browser</title>
+  <style>
+    :root {
+      /* Тёмно-синяя ночная палитра */
+      --bg-primary: #0a1120;
+      --bg-secondary: #131e3a;
+      --bg-tertiary: #1c2a4a;
+      --accent-primary: #6366f1;
+      --accent-secondary: #8b5cf6;
+      --accent-glow: rgba(99, 102, 241, 0.4);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border-color: #2a3a5a;
+      --tab-active: linear-gradient(135deg, #1e293b, #334155);
+      --tab-inactive: linear-gradient(135deg, #0f172a, #1e293b);
+      --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-        [data-theme="light"] {
-            --bg-color: #f1f5f9;
-            --bg-secondary: #ffffff;
-            --glass-bg: rgba(255, 255, 255, 0.8);
-            --glass-border: rgba(0, 0, 0, 0.05);
-            --text-primary: #0f172a;
-            --text-secondary: #64748b;
-        }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: var(--font-family);
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            overflow-x: hidden;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            padding-bottom: calc(var(--nav-height) + 20px);
-        }
+    /* === HEADER / TOOLBAR === */
+    .browser-chrome {
+      background: linear-gradient(180deg, var(--bg-secondary), var(--bg-primary));
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: var(--shadow-lg);
+      z-index: 100;    }
 
-        /* --- Animations --- */        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulseGlow { 0% { box-shadow: 0 0 5px var(--accent-glow); } 50% { box-shadow: 0 0 20px var(--accent-glow); } 100% { box-shadow: 0 0 5px var(--accent-glow); } }
-        @keyframes fireFlicker { 0% { filter: drop-shadow(0 0 2px #ff9900); } 50% { filter: drop-shadow(0 0 10px #ff4500); } 100% { filter: drop-shadow(0 0 2px #ff9900); } }
+    .tabs-bar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .tabs-bar::-webkit-scrollbar { display: none; }
 
-        /* --- Loader --- */
-        #loader {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease;
-        }
-        .loader-logo {
-            width: 80px;
-            height: 80px;
-            border-radius: 20px;
-            object-fit: cover;
-            margin-bottom: 20px;
-            animation: pulseGlow 2s infinite;
-            background: #333; /* Fallback */
-        }
-        .loader-text {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--accent);
-            letter-spacing: 2px;
-        }
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--tab-inactive);
+      border: 1px solid var(--border-color);
+      border-radius: 10px 10px 0 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+      min-width: 160px;
+      max-width: 220px;
+      position: relative;
+      overflow: hidden;
+    }
 
-        /* --- Header --- */
-        header {
-            position: fixed;
-            top: 0; left: 0; width: 100%;
-            height: var(--header-height);
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--glass-border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 15px;
-            z-index: 1000;
-        }
+    .tab.active {
+      background: var(--tab-active);
+      color: var(--text-primary);
+      border-bottom: none;
+      box-shadow: 0 -2px 12px var(--accent-glow);
+    }
 
-        .logo-area {
-            display: flex;            align-items: center;
-            gap: 10px;
-            font-weight: 700;
-            font-size: 20px;
-            color: var(--text-primary);
-            cursor: pointer;
-        }
-        .logo-area img {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-        }
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+      border-radius: 2px;
+    }
 
-        .search-bar {
-            flex: 1;
-            margin: 0 15px;
-            position: relative;
-        }
-        .search-bar input {
-            width: 100%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 8px 12px;
-            color: var(--text-primary);
-            outline: none;
-            font-size: 14px;
-        }
+    .tab-title {
+      flex: 1;      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-        .header-actions button {
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            font-size: 20px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
+    .tab-close {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      transition: var(--transition);
+      font-size: 14px;
+      line-height: 1;
+    }
+    .tab-close:hover {
+      background: rgba(255,255,255,0.15);
+      opacity: 1;
+    }
 
-        /* --- Views --- */
-        .view {
-            display: none;
-            padding-top: calc(var(--header-height) + 10px);
-            animation: fadeIn 0.3s ease;
-            min-height: 100vh;
-        }
-        .view.active {
-            display: block;
-        }
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+    }
 
-        /* --- Posts Feed --- */        .feed-container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 0 10px;
-        }
+    .nav-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+    }
+    .nav-btn:hover {
+      background: rgba(255,255,255,0.1);
+      color: var(--text-primary);
+      transform: translateY(-1px);
+    }
+    .nav-btn:active {
+      transform: scale(0.95);    }
+    .nav-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
 
-        .post-card {
-            background: var(--bg-secondary);
-            border-radius: 16px;
-            margin-bottom: 20px;
-            overflow: hidden;
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-        }
-        .post-card.fire-active {
-            animation: fireFlicker 0.5s ease-in-out;
-            border-color: #ff4500;
-        }
+    .address-bar {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 6px 14px;
+      gap: 10px;
+      transition: var(--transition);
+      min-width: 200px;
+    }
+    .address-bar:focus-within {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .address-bar input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 14px;
+      outline: none;
+    }
+    .address-bar input::placeholder {
+      color: var(--text-secondary);
+    }
+    .address-bar svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--text-secondary);
+      stroke-width: 2;
+      fill: none;
+    }
 
-        .post-header {
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .post-author {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--accent);
-        }
-        .author-info h4 {
-            margin: 0;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .verified {
-            color: #3b82f6;
-            width: 14px;
-            height: 14px;        }
-        .author-info span {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-        .post-menu-btn {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 20px;
-            cursor: pointer;
-            padding: 5px;
-        }
+    .right-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;      margin-left: auto;
+    }
 
-        .post-content {
-            padding: 0 12px 12px;
-            font-size: 15px;
-            line-height: 1.5;
-        }
-        .post-media {
-            width: 100%;
-            background: #000;
-            display: block;
-        }
-        .post-media img, .post-media video {
-            width: 100%;
-            display: block;
-            max-height: 500px;
-            object-fit: cover;
-        }
+    .menu-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .menu-btn:hover {
+      background: rgba(255,255,255,0.1);
+      color: var(--text-primary);
+    }
+    .menu-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
 
-        .post-actions {
-            padding: 10px 12px;
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-        .action-btn {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: color 0.2s, transform 0.1s;
-        }
-        .action-btn:active { transform: scale(0.9); }
-        .action-btn.liked { color: #ef4444; }        .action-btn.wolf-active { color: #a855f7; }
-        
-        .reaction-count {
-            font-size: 14px;
-            font-weight: 600;
-        }
+    /* === LOGO FLOKY === */
+    .floky-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      font-weight: 600;
+      font-size: 15px;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+    }
+    .wolf-logo {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .wolf-logo svg {
+      width: 100%;
+      height: 100%;
+    }
 
-        .comments-section {
-            background: rgba(0,0,0,0.1);
-            padding: 10px 12px;
-            display: none;
-        }
-        .comments-section.open { display: block; }
-        .comment {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-        .comment-input-area {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .comment-input-area input {
-            flex: 1;
-            background: rgba(255,255,255,0.05);
-            border: none;
-            border-radius: 20px;
-            padding: 8px 15px;
-            color: var(--text-primary);
-            outline: none;
-        }
+    /* === CONTENT AREA === */    .content-area {
+      flex: 1;
+      background: #050a15;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
 
-        /* --- Profile View --- */
-        .profile-header {
-            text-align: center;
-            padding: 20px;
-        }
-        .profile-pic-lg {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            border: 3px solid var(--accent);
-            margin-bottom: 10px;
-        }
-        .stats-row {
-            display: flex;
-            justify-content: center;
-            gap: 20px;            margin: 15px 0;
-        }
-        .stat-item {
-            text-align: center;
-        }
-        .stat-num { font-weight: 700; font-size: 18px; }
-        .stat-label { font-size: 12px; color: var(--text-secondary); }
+    .iframe-container {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #0a0f1e;
+    }
 
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px var(--accent-glow);
-        }
-        .btn-secondary {
-            background: rgba(255,255,255,0.1);
-            color: var(--text-primary);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-        }
+    .placeholder-page {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+    .placeholder-page h2 {
+      font-size: 24px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .placeholder-page p {
+      max-width: 500px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .demo-btns {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .demo-btn {
+      padding: 10px 18px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      border: none;
+      border-radius: 10px;      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+    .demo-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.55);
+    }
+    .demo-btn.secondary {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      box-shadow: none;
+    }
+    .demo-btn.secondary:hover {
+      background: #253352;
+    }
 
-        .profile-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2px;
-        }
-        .grid-item {
-            aspect-ratio: 1;
-            background: #333;
-            overflow: hidden;
-        }
-        .grid-item img { width: 100%; height: 100%; object-fit: cover; }
+    .status-bar {
+      padding: 6px 16px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-color);
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-        /* --- Bottom Nav --- */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0; left: 0; width: 100%;
-            height: var(--nav-height);
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid var(--glass-border);            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 1000;
-        }
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--text-secondary);
-            font-size: 10px;
-            gap: 4px;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .nav-item.active { color: var(--accent); }
-        .nav-icon { font-size: 22px; }
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--accent-primary);
+      border-left: 4px solid var(--accent-primary);
+      padding: 14px 20px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      max-width: 320px;
+      animation: slideIn 0.3s ease-out;
+      z-index: 1000;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    /* === АНИМАЦИИ И ЭФФЕКТЫ === */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    .loading::after {
+      content: '●●●';
+      animation: pulse 1.4s infinite;
+      letter-spacing: 2px;
+    }
 
-        /* --- Modals --- */
-        .modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 2000;
-            display: none;
-            justify-content: center;
-            align-items: flex-end; /* Sheet style */
-        }
-        .modal.open { display: flex; }
-        
-        .modal-content {
-            background: var(--bg-secondary);
-            width: 100%;
-            max-width: 600px;
-            border-radius: 20px 20px 0 0;
-            padding: 20px;
-            animation: slideUp 0.3s ease;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .close-modal {
-            background: none; border: none; color: var(--text-secondary); font-size: 24px;        }
-
-        /* --- Create Post --- */
-        .create-post-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 8px;
-            background: rgba(255,255,255,0.05);
-            border: none;
-            color: var(--text-secondary);
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .tab-btn.active { background: var(--accent); color: white; }
-        
-        textarea {
-            width: 100%;
-            background: rgba(0,0,0,0.2);
-            border: none;
-            border-radius: 12px;
-            padding: 15px;
-            color: var(--text-primary);
-            resize: none;
-            height: 100px;
-            font-family: inherit;
-            outline: none;
-        }
-
-        /* --- Notice --- */
-        .notice-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            border-bottom: 1px solid var(--glass-border);
-        }
-        .notice-icon {
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            background: rgba(168, 85, 247, 0.2);
-            color: var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-        /* --- Custom Video Player Controls (Hidden default) --- */
-        video::-webkit-media-controls { display:none !important; }
-        .video-overlay {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 40px;
-            pointer-events: none;
-            opacity: 0.8;
-        }
-
-    </style>
+    /* === АДАПТИВ === */
+    @media (max-width: 900px) {
+      .tabs-bar { gap: 2px; }
+      .tab { min-width: 120px; padding: 6px 10px; font-size: 12px; }
+      .address-bar { min-width: 150px; }
+    }
+  </style>
 </head>
 <body>
-
-    <!-- Loader -->
-    <div id="loader">
-        <img src="Floky.png" alt="Floky Logo" class="loader-logo" onerror="this.src='https://placehold.co/100x100/a855f7/ffffff?text=F'">
-        <div class="loader-text">FLOKY</div>
+  <!-- Browser Chrome -->
+  <div class="browser-chrome">
+    <!-- Tabs -->
+    <div class="tabs-bar">
+      <div class="tab active" data-url="https://example.com">
+        <span class="tab-title">🏠 Floky Start</span>
+        <span class="tab-close">×</span>
+      </div>
+      <div class="tab" data-url="https://wikipedia.org">
+        <span class="tab-title">🌐 Wikipedia</span>
+        <span class="tab-close">×</span>
+      </div>
     </div>
 
-    <!-- Header -->
-    <header>
-        <div class="logo-area" onclick="navigateTo('home')">
-            <img src="Floky.png" alt="Logo" onerror="this.src='https://placehold.co/50x50/a855f7/ffffff?text=F'">
-            <span>Floky</span>
+    <!-- Navigation -->
+    <div class="nav-controls">
+      <!-- Floky Logo -->
+      <div class="floky-logo">
+        <div class="wolf-logo">
+          <!-- Стилизованный волк (SVG) -->
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="wolfGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#6366f1"/>
+                <stop offset="100%" style="stop-color:#8b5cf6"/>
+              </linearGradient>
+            </defs>
+            <!-- Голова волка: минималистичный силуэт -->
+            <path d="M50 15 C35 15, 25 25, 25 40 L25 65 C25 75, 35 85, 50 85 C65 85, 75 75, 75 65 L75 40 C75 25, 65 15, 50 15 Z" 
+                  fill="none" stroke="url(#wolfGrad)" stroke-width="3"/>            <!-- Уши -->
+            <path d="M30 25 L25 10 L40 20 Z" fill="url(#wolfGrad)" opacity="0.9"/>
+            <path d="M70 25 L75 10 L60 20 Z" fill="url(#wolfGrad)" opacity="0.9"/>
+            <!-- Глаза -->
+            <circle cx="40" cy="45" r="4" fill="#6366f1"/>
+            <circle cx="60" cy="45" r="4" fill="#6366f1"/>
+            <!-- Нос -->
+            <path d="M50 60 Q45 65, 50 70 Q55 65, 50 60" fill="#8b5cf6"/>
+            <!-- Силуэт морды -->
+            <path d="M35 55 Q50 75, 65 55" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </div>
-        <div class="search-bar">
-            <input type="text" placeholder="Поиск...">
-        </div>
-        <div class="header-actions">
-            <button onclick="toggleTheme()">🌗</button>
-        </div>
-    </header>
+        <span>Floky</span>
+      </div>
 
-    <!-- Main Content Area -->
-    <main id="app">
-        
-        <!-- HOME VIEW -->
-        <div id="view-home" class="view active">
-            <div class="feed-container" id="feed">
-                <!-- Posts injected by JS -->
-            </div>
-        </div>
+      <!-- Nav Buttons -->
+      <button class="nav-btn" id="btn-back" title="Назад">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <button class="nav-btn" id="btn-forward" title="Вперёд">
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button class="nav-btn" id="btn-reload" title="Обновить">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+      </button>
+      <button class="nav-btn" id="btn-home" title="Домой">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      </button>
 
-        <!-- DIRECT VIEW -->
-        <div id="view-direct" class="view">
-            <div class="feed-container">                <h2 style="padding: 10px;">Сообщения</h2>
-                <div class="notice-item">
-                    <img src="https://i.pravatar.cc/100?img=1" class="avatar">
-                    <div>
-                        <h4>Alex Wolf</h4>
-                        <p style="color:var(--text-secondary); margin:0;">Привет! Как дела?</p>
-                    </div>
-                </div>
-                <div class="notice-item">
-                    <img src="https://i.pravatar.cc/100?img=5" class="avatar">
-                    <div>
-                        <h4>Maria Sky</h4>
-                        <p style="color:var(--text-secondary); margin:0;">Скинь фотки с вечеринки</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <!-- Address Bar -->
+      <div class="address-bar">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <input type="text" id="url-input" placeholder="Введите URL или поиск..." value="https://example.com"/>
+      </div>
 
-        <!-- LIBRARY VIEW -->
-        <div id="view-library" class="view">
-            <div class="feed-container">
-                <h2 style="padding: 10px;">Закладки</h2>
-                <div class="profile-grid" id="library-grid">
-                    <!-- Saved posts -->
-                </div>
-            </div>
-        </div>
-
-        <!-- NOTICE VIEW -->
-        <div id="view-notice" class="view">
-            <div class="feed-container">
-                <h2 style="padding: 10px;">Уведомления</h2>
-                <div class="notice-item">
-                    <div class="notice-icon">🐺</div>
-                    <div>
-                        <h4>WolfPack</h4>
-                        <p style="color:var(--text-secondary); margin:0;">Понравился ваш пост</p>
-                    </div>
-                </div>
-                <div class="notice-item">
-                    <div class="notice-icon">❤️</div>
-                    <div>
-                        <h4>Anna_K</h4>
-                        <p style="color:var(--text-secondary); margin:0;">Прокомментировала: "Круто!"</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- PROFILE VIEW -->        <div id="view-profile" class="view">
-            <div class="profile-header">
-                <img src="https://i.pravatar.cc/150?img=12" class="profile-pic-lg" id="my-profile-pic">
-                <h2 id="my-profile-name">Alex Wolf <span class="verified">✔</span></h2>
-                <p style="color:var(--text-secondary)">@alex_wolf</p>
-                
-                <div class="stats-row">
-                    <div class="stat-item">
-                        <div class="stat-num">1.2k</div>
-                        <div class="stat-label">Читатели</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-num">450</div>
-                        <div class="stat-label">Читаю</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-num">84</div>
-                        <div class="stat-label">Посты</div>
-                    </div>
-                </div>
-
-                <button class="btn-primary" onclick="openModal('create-post-modal')">Новый пост</button>
-                <button class="btn-secondary" onclick="openModal('settings-modal')">Настройки</button>
-            </div>
-            <div class="profile-grid">
-                <!-- User posts grid -->
-                <div class="grid-item"><img src="https://picsum.photos/300/300?random=1"></div>
-                <div class="grid-item"><img src="https://picsum.photos/300/300?random=2"></div>
-                <div class="grid-item"><img src="https://picsum.photos/300/300?random=3"></div>
-            </div>
-        </div>
-
-        <!-- OTHER USER PROFILE (Dynamic) -->
-        <div id="view-other-profile" class="view">
-            <div class="profile-header">
-                <button class="btn-secondary" style="width:auto; margin-bottom:10px;" onclick="navigateTo('home')">← Назад</button>
-                <img src="" class="profile-pic-lg" id="other-profile-pic">
-                <h2 id="other-profile-name">User Name</h2>
-                <p style="color:var(--text-secondary)" id="other-profile-handle">@handle</p>
-                <div class="stats-row">
-                    <div class="stat-item"><div class="stat-num" id="other-followers">0</div><div class="stat-label">Читатели</div></div>
-                    <div class="stat-item"><div class="stat-num" id="other-posts">0</div><div class="stat-label">Посты</div></div>
-                </div>
-                <button class="btn-primary">Подписаться</button>
-            </div>
-            <div class="profile-grid" id="other-profile-grid"></div>
-        </div>
-
-    </main>
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <div class="nav-item active" onclick="navigateTo('home')" id="nav-home">
-            <div class="nav-icon">🏠</div>
-            <span>Главная</span>
-        </div>
-        <div class="nav-item" onclick="navigateTo('direct')" id="nav-direct">
-            <div class="nav-icon">✉️</div>
-            <span>Direct</span>
-        </div>
-        <div class="nav-item" onclick="navigateTo('library')" id="nav-library">
-            <div class="nav-icon">📚</div>
-            <span>Library</span>
-        </div>
-        <div class="nav-item" onclick="navigateTo('notice')" id="nav-notice">
-            <div class="nav-icon">🔔</div>
-            <span>Notice</span>
-        </div>
-        <div class="nav-item" onclick="navigateTo('profile')" id="nav-profile">
-            <div class="nav-icon">👤</div>
-            <span>Profile</span>
-        </div>
-    </nav>
-
-    <!-- Create Post Modal -->
-    <div id="create-post-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Создать пост</h3>
-                <button class="close-modal" onclick="closeModal('create-post-modal')">×</button>
-            </div>
-            <div class="create-post-tabs">
-                <button class="tab-btn active" onclick="setPostType('text')">Текст</button>
-                <button class="tab-btn" onclick="setPostType('image')">Фото</button>
-                <button class="tab-btn" onclick="setPostType('video')">Видео</button>
-            </div>
-            <textarea id="new-post-text" placeholder="О чем думаешь?"></textarea>
-            <div id="media-preview" style="margin: 10px 0; display:none;">
-                <img src="" id="preview-img" style="width:100%; border-radius:10px;">
-            </div>
-            <button class="btn-primary" onclick="publishPost()">Опубликовать</button>
-        </div>
+      <!-- Right Controls -->
+      <div class="right-controls">
+        <button class="nav-btn" id="btn-bookmarks" title="Закладки">
+          <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+        </button>
+        <button class="nav-btn" id="btn-downloads" title="Загрузки">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </button>
+        <button class="menu-btn" id="btn-menu" title="Меню">
+          <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+      </div>
     </div>
-
-    <!-- Settings Modal -->
-    <div id="settings-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Настройки</h3>
-                <button class="close-modal" onclick="closeModal('settings-modal')">×</button>            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <span>Темная тема</span>
-                <button class="btn-secondary" onclick="toggleTheme()">Переключить</button>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <span>Уведомления</span>
-                <button class="btn-secondary" style="background:var(--accent)">Вкл</button>
-            </div>
-            <button class="btn-primary" style="background:var(--danger)" onclick="alert('Выход...')">Выйти</button>
-        </div>
+  </div>
+  <!-- Content Area -->
+  <div class="content-area">
+    <iframe class="iframe-container" id="webview" src="https://example.com" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+    
+    <div class="placeholder-page" id="placeholder" style="display:none;">
+      <h2>🐺 Floky Browser</h2>
+      <p>Современный браузер с тёмной темой, градиентами и стилизованными иконками. Поддерживает встраивание сайтов, разрешающих iframe.</p>
+      <div class="demo-btns">
+        <button class="demo-btn" onclick="navigateTo('https://example.com')">🏠 example.com</button>
+        <button class="demo-btn" onclick="navigateTo('https://wikipedia.org')">📚 wikipedia.org</button>
+        <button class="demo-btn secondary" onclick="showDiscordNotice()">💬 discord.com</button>
+      </div>
+      <p style="margin-top:20px;font-size:13px;opacity:0.8;">
+        ⚠️ Discord, Google и другие сайты блокируют отображение в iframe из соображений безопасности.
+      </p>
     </div>
+  </div>
 
-    <!-- Post Options Menu -->
-    <div id="post-options-modal" class="modal">
-        <div class="modal-content" style="height: auto;">
-            <div class="modal-header">
-                <h3>Действия</h3>
-                <button class="close-modal" onclick="closeModal('post-options-modal')">×</button>
-            </div>
-            <button class="btn-secondary" style="width:100%; margin-bottom:10px; text-align:left;">🔖 В закладки</button>
-            <button class="btn-secondary" style="width:100%; margin-bottom:10px; text-align:left;">🚫 Заблокировать</button>
-            <button class="btn-secondary" style="width:100%; margin-bottom:10px; text-align:left; color:var(--danger)">⚠️ Пожаловаться</button>
-        </div>
-    </div>
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span id="status-text">Готово</span>
+    <span id="security-indicator">🔒 Защищено</span>
+  </div>
 
-    <script>
-        // --- State & Data ---
-        let currentTheme = 'dark';
-        let posts = [];
-        const currentUser = {
-            name: "Alex Wolf",
-            handle: "@alex_wolf",
-            avatar: "https://i.pravatar.cc/150?img=12",
-            verified: true
-        };
+  <!-- Notification Template -->
+  <div id="notification" class="notification" style="display:none;"></div>
 
-        // --- Init ---
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loader').style.display = 'none';
-                }, 500);
-            }, 3000); // 3 sec loader
+  <script>
+    // === FLOKY BROWSER LOGIC ===
+    const urlInput = document.getElementById('url-input');
+    const webview = document.getElementById('webview');
+    const placeholder = document.getElementById('placeholder');
+    const statusText = document.getElementById('status-text');
+    const tabs = document.querySelectorAll('.tab');
+    const notification = document.getElementById('notification');
 
-            generatePosts(50);
-            renderFeed();
-        });
-        // --- Theme ---
-        function toggleTheme() {
-            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', currentTheme);
-            closeModal('settings-modal');
+    // Навигация
+    function navigateTo(url) {
+      if (!url.startsWith('http')) url = 'https://' + url;
+      
+      // Проверка на блокировку iframe
+      const blockedDomains = ['discord.com', 'google.com', 'vk.com', 'youtube.com', 'mail.ru'];
+      const domain = new URL(url).hostname.replace('www.', '');
+      
+      if (blockedDomains.some(d => domain.includes(d))) {
+        showPlaceholder();
+        showNotification(`⚠️ ${domain} блокирует отображение в iframe. Откройте сайт в отдельном окне.`);
+        return;
+      }
+            statusText.textContent = 'Загрузка...';
+      statusText.classList.add('loading');
+      webview.src = url;
+      urlInput.value = url;
+      placeholder.style.display = 'none';
+      webview.style.display = 'block';
+      
+      // Обновить активную вкладку
+      document.querySelector('.tab.active').dataset.url = url;
+      document.querySelector('.tab.active .tab-title').textContent = new URL(url).hostname;
+    }
+
+    function showPlaceholder() {
+      webview.style.display = 'none';
+      placeholder.style.display = 'flex';
+      statusText.textContent = 'Готово';
+      statusText.classList.remove('loading');
+    }
+
+    function showDiscordNotice() {
+      showPlaceholder();
+      showNotification('💬 Discord.com не поддерживает встраивание в iframe. В реальной версии Floky на Electron этот сайт откроется в полноценном окне.');
+    }
+
+    function showNotification(message) {
+      notification.textContent = message;
+      notification.style.display = 'block';
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.style.display = 'none', 300);
+      }, 4000);
+    }
+
+    // Обработчики
+    urlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') navigateTo(urlInput.value.trim());
+    });
+
+    document.getElementById('btn-reload').onclick = () => {
+      statusText.textContent = 'Обновление...';
+      webview.contentWindow.location.reload();
+    };
+
+    document.getElementById('btn-home').onclick = () => navigateTo('https://example.com');
+
+    document.getElementById('btn-back').onclick = () => {
+      try { webview.contentWindow.history.back(); } catch(e) { showNotification('Навигация назад недоступна'); }
+    };
+
+    document.getElementById('btn-forward').onclick = () => {      try { webview.contentWindow.history.forward(); } catch(e) { showNotification('Навигация вперёд недоступна'); }
+    };
+
+    // Вкладки
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const url = tab.dataset.url;
+        if (url) navigateTo(url);
+      });
+      
+      tab.querySelector('.tab-close').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (document.querySelectorAll('.tab').length > 1) {
+          tab.remove();
+          document.querySelector('.tab').classList.add('active');
         }
+      });
+    });
 
-        // --- Navigation ---
-        function navigateTo(viewId) {
-            // Hide all views
-            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    // Инициализация
+    window.addEventListener('load', () => {
+      showPlaceholder();
+      showNotification('🐺 Добро пожаловать в Floky! Дизайн-прототип с тёмной темой и стилизованными иконками.');
+    });
 
-            // Show target
-            const target = document.getElementById(`view-${viewId}`);
-            if(target) target.classList.add('active');
+    // Обработка загрузки iframe
+    webview.addEventListener('load', () => {
+      statusText.textContent = 'Готово';
+      statusText.classList.remove('loading');
+    });
 
-            // Highlight Nav
-            const nav = document.getElementById(`nav-${viewId}`);
-            if(nav) nav.classList.add('active');
-            
-            window.scrollTo(0,0);
-        }
-
-        // --- Post Generation ---
-        function generatePosts(count) {
-            const types = ['text', 'image', 'video'];
-            const texts = [
-                "Всем привет! Как ваше настроение сегодня? 🌙",
-                "Новый трек уже в библиотеке, зацените!",
-                "Прогулка по ночному городу... 🌃",
-                "Кто идет на концерт в субботу?",
-                "Просто красивое фото для ленты.",
-                "Floky - лучшая соцсеть! 🔥",
-                "Утро доброе, друзья!",
-                "Смотрите, какой кот!",
-                "Работаю над новым проектом.",
-                "Всем хорошего дня!"
-            ];
-
-            for (let i = 0; i < count; i++) {
-                const type = types[Math.floor(Math.random() * types.length)];
-                let mediaSrc = '';
-                if (type === 'image') mediaSrc = `https://picsum.photos/600/400?random=${i}`;
-                if (type === 'video') mediaSrc = `https://www.w3schools.com/html/mov_bbb.mp4`; // Stock video
-
-                posts.push({
-                    id: i,
-                    author: i === 0 ? currentUser : {
-                        name: `User ${i}`,                        handle: `@user${i}`,
-                        avatar: `https://i.pravatar.cc/100?img=${i % 50}`,
-                        verified: Math.random() > 0.8
-                    },
-                    content: texts[i % texts.length],
-                    type: type,
-                    media: mediaSrc,
-                    likes: Math.floor(Math.random() * 500),
-                    comments: Math.floor(Math.random() * 50),
-                    isLiked: false,
-                    isWolfed: false
-                });
-            }
-        }
-
-        function renderFeed() {
-            const container = document.getElementById('feed');
-            container.innerHTML = '';
-            
-            posts.forEach(post => {
-                const card = document.createElement('div');
-                card.className = 'post-card';
-                card.id = `post-${post.id}`;
-
-                let mediaHTML = '';
-                if (post.type === 'image') {
-                    mediaHTML = `<div class="post-media"><img src="${post.media}" loading="lazy"></div>`;
-                } else if (post.type === 'video') {
-                    mediaHTML = `
-                        <div class="post-media" style="position:relative;">
-                            <video src="${post.media}" onclick="togglePlay(this)"></video>
-                            <div class="video-overlay" onclick="togglePlay(this.previousElementSibling)">▶</div>
-                        </div>`;
-                }
-
-                card.innerHTML = `
-                    <div class="post-header">
-                        <div class="post-author" onclick="openUserProfile(${post.id})">
-                            <img src="${post.author.avatar}" class="avatar">
-                            <div class="author-info">
-                                <h4>${post.author.name} ${post.author.verified ? '<span class="verified">✔</span>' : ''}</h4>
-                                <span>${post.author.handle}</span>
-                            </div>
-                        </div>
-                        <button class="post-menu-btn" onclick="openPostMenu(${post.id})">⋮</button>
-                    </div>
-                    <div class="post-content">${post.content}</div>
-                    ${mediaHTML}
-                    <div class="post-actions">
-                        <button class="action-btn wolf-btn ${post.isWolfed ? 'wolf-active' : ''}" onclick="toggleReaction(${post.id}, 'wolf')">                            🐺 <span class="reaction-count">${post.likes}</span>
-                        </button>
-                        <button class="action-btn" onclick="toggleComments(${post.id})">
-                            💬 ${post.comments}
-                        </button>
-                        <button class="action-btn share-btn" onclick="alert('Ссылка скопирована!')">
-                            🔗
-                        </button>
-                    </div>
-                    <div class="comments-section" id="comments-${post.id}">
-                        <div class="comment">
-                            <img src="https://i.pravatar.cc/50?img=33" class="avatar" style="width:30px;height:30px;">
-                            <div><b>Fan123</b> Крутой пост! 🔥</div>
-                        </div>
-                        <div class="comment-input-area">
-                            <input type="text" placeholder="Комментарий...">
-                            <button style="background:none;border:none;color:var(--accent);font-weight:bold;">Send</button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        // --- Interactions ---
-        function toggleReaction(postId, type) {
-            const post = posts.find(p => p.id === postId);
-            const card = document.getElementById(`post-${postId}`);
-            const btn = card.querySelector('.wolf-btn');
-            const countSpan = btn.querySelector('.reaction-count');
-
-            if (type === 'wolf') {
-                if (post.isWolfed) {
-                    post.isWolfed = false;
-                    post.likes--;
-                    btn.classList.remove('wolf-active');
-                    card.classList.remove('fire-active');
-                } else {
-                    post.isWolfed = true;
-                    post.likes++;
-                    btn.classList.add('wolf-active');
-                    // Fire effect
-                    card.classList.add('fire-active');
-                    setTimeout(() => card.classList.remove('fire-active'), 500);
-                }
-                countSpan.innerText = post.likes;
-            }
-        }
-
-        function toggleComments(postId) {            const section = document.getElementById(`comments-${postId}`);
-            section.classList.toggle('open');
-        }
-
-        function openPostMenu(postId) {
-            openModal('post-options-modal');
-        }
-
-        // --- Video Player ---
-        function togglePlay(video) {
-            if (video.paused) {
-                video.play();
-                video.nextElementSibling.style.opacity = '0'; // Hide play icon
-            } else {
-                video.pause();
-                video.nextElementSibling.style.opacity = '0.8';
-            }
-        }
-
-        // --- Modals ---
-        function openModal(id) {
-            document.getElementById(id).classList.add('open');
-        }
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('open');
-        }
-
-        // --- Create Post Logic ---
-        let currentPostType = 'text';
-        function setPostType(type) {
-            currentPostType = type;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            const preview = document.getElementById('media-preview');
-            const img = document.getElementById('preview-img');
-            
-            if (type === 'text') {
-                preview.style.display = 'none';
-            } else if (type === 'image') {
-                preview.style.display = 'block';
-                img.src = `https://picsum.photos/300/200?random=${Math.random()}`;
-                img.style.display = 'block';
-            } else if (type === 'video') {
-                preview.style.display = 'block';
-                img.src = 'https://placehold.co/300x200/000000/FFF?text=Video+Preview'; // Placeholder for video
-                img.style.display = 'block';
-            }
-        }
-        function publishPost() {
-            const text = document.getElementById('new-post-text').value;
-            if (!text) return alert('Введите текст!');
-
-            const newPost = {
-                id: Date.now(),
-                author: currentUser,
-                content: text,
-                type: currentPostType,
-                media: currentPostType === 'image' ? document.getElementById('preview-img').src : (currentPostType === 'video' ? 'https://www.w3schools.com/html/mov_bbb.mp4' : ''),
-                likes: 0,
-                comments: 0,
-                isLiked: false,
-                isWolfed: false
-            };
-
-            posts.unshift(newPost); // Add to top
-            renderFeed();
-            closeModal('create-post-modal');
-            document.getElementById('new-post-text').value = '';
-            navigateTo('home');
-        }
-
-        // --- User Profile Navigation ---
-        function openUserProfile(postId) {
-            const post = posts.find(p => p.id === postId);
-            const user = post.author;
-            
-            // Populate Other Profile View
-            document.getElementById('other-profile-pic').src = user.avatar;
-            document.getElementById('other-profile-name').innerText = user.name + (user.verified ? ' ✔' : '');
-            document.getElementById('other-profile-handle').innerText = user.handle;
-            document.getElementById('other-followers').innerText = Math.floor(Math.random() * 5000);
-            document.getElementById('other-posts').innerText = Math.floor(Math.random() * 200);
-            
-            // Generate grid for them
-            const grid = document.getElementById('other-profile-grid');
-            grid.innerHTML = '';
-            for(let k=0; k<9; k++) {
-                grid.innerHTML += `<div class="grid-item"><img src="https://picsum.photos/300/300?random=${postId+k}"></div>`;
-            }
-
-            navigateTo('other-profile');
-        }
-
-    </script>
+    webview.addEventListener('error', () => {
+      showPlaceholder();
+      showNotification('❌ Не удалось загрузить страницу. Возможно, сайт блокирует встраивание.');
+    });
+  </script>
 </body>
 </html>
