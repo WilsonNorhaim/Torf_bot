@@ -1,0 +1,344 @@
+/* --- Сброс и Базовые настройки --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
+}
+
+body {
+    /* Фон с картинкой g1.png */
+    background: url('g1.png') no-repeat center center fixed;
+    background-size: cover;
+    color: #ffffff;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Затемнение фона для читаемости поверх картинки */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.7); /* Темная вуаль */
+    z-index: -1;
+}
+
+/* --- Экран загрузки --- */
+#loader-screen {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #0f0f0f;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+}
+
+.loader-logo {
+    width: 150px;
+    height: auto;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.5; transform: scale(0.95); }
+    50% { opacity: 1; transform: scale(1); }    100% { opacity: 0.5; transform: scale(0.95); }
+}
+
+/* --- Основной контейнер --- */
+.app-container {
+    width: 100%;
+    max-width: 900px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* --- Шапка --- */
+.top-header {
+    padding: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.brand-logo {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+}
+
+/* --- Область чата --- */
+.chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    /* Скроллбар в стиле Discord */
+    scrollbar-width: thin;
+    scrollbar-color: #4f545c #2f3136;
+}
+
+.chat-area::-webkit-scrollbar {    width: 8px;
+}
+.chat-area::-webkit-scrollbar-thumb {
+    background-color: #4f545c;
+    border-radius: 4px;
+}
+
+/* Сообщения */
+.message {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    position: relative;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message.user {
+    align-self: flex-end;
+    background: #5865F2; /* Discord Blurple */
+    color: white;
+    border-bottom-right-radius: 2px;
+}
+
+.message.ai {
+    align-self: flex-start;
+    background: rgba(255, 255, 255, 0.1); /* Прозрачный фон */
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+    border-bottom-left-radius: 2px;
+}
+
+/* Лоадер змейка */
+.loader-container {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.snake-loader {
+    width: 25px;    height: 25px;
+}
+
+/* Индикатор печати (точки) */
+.typing-indicator {
+    display: flex;
+    gap: 4px;
+    margin-top: 5px;
+}
+.typing-indicator .dot {
+    width: 6px;
+    height: 6px;
+    background: #b9bbbe;
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+.typing-indicator .dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-indicator .dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+
+/* --- Панель ввода (Низ) --- */
+.input-container {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+/* Кнопка меню (Жидкое стекло) */
+.glass-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;}
+
+.glass-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+/* Обертка поля ввода */
+.input-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    
+    /* Стиль жидкого стекла для поля */
+    background: rgba(30, 30, 35, 0.6);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px; /* Сильное скругление */
+    padding: 5px 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.input-wrapper input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 12px;
+    font-size: 1rem;
+    outline: none;
+}
+
+.input-wrapper input::placeholder {
+    color: #b9bbbe;
+}
+
+.send-btn {
+    background: #5865F2;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s;}
+
+.send-btn:hover {
+    transform: scale(1.1);
+    background: #4752c4;
+}
+
+/* --- Футер --- */
+.footer {
+    text-align: center;
+    font-size: 0.65rem; /* Очень тонкий шрифт */
+    color: #72767d;
+    padding-bottom: 10px;
+    letter-spacing: 0.5px;
+}
+
+/* --- Боковая панель (Sidebar) --- */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -300px; /* Скрыто слева */
+    width: 280px;
+    height: 100%;
+    background: rgba(20, 20, 25, 0.95);
+    backdrop-filter: blur(20px);
+    z-index: 1000;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-right: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar.open {
+    left: 0;
+}
+
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar-header button {
+    background: none;
+    border: none;
+    color: #b9bbbe;
+    cursor: pointer;
+    font-size: 1.2rem;}
+
+.history-list {
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.history-item {
+    padding: 10px;
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #dcddde;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: background 0.2s;
+}
+
+.history-item:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+/* Затемнение фона */
+.overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 900;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Адаптив для мобильных */
+@media (max-width: 600px) {
+    .app-container {
+        width: 100%;
+    }
+    .brand {
+        font-size: 1.2rem;
+    }
+}
