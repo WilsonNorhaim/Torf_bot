@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faber AI</title>
+    <style>
+        /* --- RESET & FONTS --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --discord-accent: #5865F2;
+            --discord-hover: #4752c4;
+            --text-main: #ffffff;
+            --text-muted: #b9bbbe;
+            --loader-color: #ffffff;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- SPLASH SCREEN --- */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;            background-color: #000;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease-out;
+        }
+
+        #splash-screen img {
+            max-width: 200px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* --- HEADER --- */
+        header {
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .header-logo {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(88, 101, 242, 0.5);
+        }
+
+        /* --- MAIN LAYOUT --- */
+        .main-container {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+        /* --- SIDEBAR --- */
+        .sidebar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100%;
+            background: rgba(15, 12, 41, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--glass-border);
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sidebar h3 {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .history-list {
+            list-style: none;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: background 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-item:hover {
+            background: var(--glass-bg);
+            color: var(--text-main);        }
+
+        /* --- CHAT AREA --- */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding-bottom: 100px; /* Space for input */
+            position: relative;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Scrollbar styling */
+        .messages-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .messages-container::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+        }
+
+        .message {
+            display: flex;
+            gap: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 40px;            height: 40px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            border: 1px solid var(--glass-border);
+        }
+
+        .avatar img {
+            width: 25px;
+            height: 25px;
+        }
+
+        .bubble {
+            background: var(--glass-bg);
+            backdrop-filter: blur(5px);
+            padding: 15px 20px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            max-width: 80%;
+            line-height: 1.5;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .message.user .bubble {
+            background: var(--discord-accent);
+            border-color: transparent;
+        }
+
+        /* --- INPUT AREA --- */
+        .input-container {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            padding: 0 20px;
+        }
+
+        .menu-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .menu-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .hamburger {
+            width: 24px;
+            height: 2px;
+            background: white;
+            position: relative;
+        }
+        .hamburger::before, .hamburger::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 2px;
+            background: white;
+            left: 0;
+        }
+        .hamburger::before { top: -8px; }
+        .hamburger::after { top: 8px; }
+
+        .input-wrapper {
+            flex: 1;
+            max-width: 700px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-field {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            padding: 15px 50px 15px 25px;
+            color: white;
+            font-size: 1rem;
+            outline: none;            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: var(--discord-accent);
+            box-shadow: 0 0 15px rgba(88, 101, 242, 0.3);
+        }
+
+        .send-btn {
+            position: absolute;
+            right: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.3s, transform 0.2s;
+        }
+
+        .send-btn:hover {
+            color: var(--discord-accent);
+            transform: scale(1.1);
+        }
+
+        .send-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.3);
+            pointer-events: none;
+        }
+
+        /* --- LOADERS --- */
+        
+        /* 1. YouTube Snake Loader (Thinking Phase) */
+        .snake-loader-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+        }
+        .snake-loader {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--discord-accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* 2. Typing Dots (While text is appearing) */
+        .typing-indicator {
+            display: inline-flex;
+            gap: 4px;
+            margin-left: 5px;
+        }
+        .typing-dot {
+            width: 4px;
+            height: 4px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        /* Overlay for sidebar */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 90;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen">
+        <img src="faber.png" alt="Faber Logo">
+    </div>
+
+    <!-- HEADER -->
+    <header>
+        <img src="faber.png" alt="Logo" class="header-logo">
+        <div class="header-title">Faber</div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        
+        <!-- SIDEBAR -->
+        <div class="overlay" id="overlay"></div>
+        <aside class="sidebar" id="sidebar">
+            <h3>История диалогов</h3>
+            <ul class="history-list" id="history-list">
+                <!-- History items will be injected here via JS -->
+                <li class="history-item">Как создать сайт?</li>
+                <li class="history-item">Рецепт пиццы</li>
+            </ul>
+        </aside>
+
+        <!-- CHAT AREA -->
+        <div class="chat-area">
+            <div class="messages-container" id="messages-container">
+                <!-- Messages go here -->
+            </div>
+
+            <!-- INPUT AREA -->
+            <div class="input-container">
+                <div class="menu-btn" id="menu-btn">
+                    <div class="hamburger"></div>
+                </div>
+                <div class="input-wrapper">
+                    <input type="text" class="input-field" id="user-input" placeholder="Спросите что-нибудь..." autocomplete="off">
+                    <button class="send-btn" id="send-btn">
+                        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <footer>
+                Wilson Corporation 2026© | Faber может ошибаться!
+            </footer>
+        </div>    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const SPLASH_DURATION = 3000;
+        const AI_THINKING_TIME = 4000;
+
+        // --- DOM ELEMENTS ---
+        const splashScreen = document.getElementById('splash-screen');
+        const menuBtn = document.getElementById('menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const messagesContainer = document.getElementById('messages-container');
+        const historyList = document.getElementById('history-list');
+
+        // --- INITIALIZATION ---
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                splashScreen.style.opacity = '0';
+                setTimeout(() => {
+                    splashScreen.style.display = 'none';
+                }, 800);
+            }, SPLASH_DURATION);
+            
+            loadHistory();
+        });
+
+        // --- SIDEBAR LOGIC ---
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        menuBtn.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        // --- CHAT LOGIC ---
+        
+        function createMessageElement(text, isUser = false, isLoading = false) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message');
+            if (isUser) msgDiv.classList.add('user');
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.classList.add('avatar');
+            
+            // Using generic SVG for avatars if faber.png isn't used for user
+            if (isUser) {                avatarDiv.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+            } else {
+                const img = document.createElement('img');
+                img.src = 'faber.png';
+                avatarDiv.appendChild(img);
+            }
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.classList.add('bubble');
+
+            if (isLoading) {
+                // Loading State (Snake)
+                bubbleDiv.innerHTML = `
+                    <div class="snake-loader-container">
+                        <div class="snake-loader"></div>
+                    </div>
+                `;
+            } else {
+                bubbleDiv.textContent = text;
+            }
+
+            msgDiv.appendChild(avatarDiv);
+            msgDiv.appendChild(bubbleDiv);
+            
+            return msgDiv;
+        }
+
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addToHistory(text) {
+            // Simple local storage logic
+            let history = JSON.parse(localStorage.getItem('faber_history') || '[]');
+            history.unshift(text);
+            if(history.length > 10) history.pop(); // Keep last 10
+            localStorage.setItem('faber_history', JSON.stringify(history));
+            loadHistory();
+        }
+
+        function loadHistory() {
+            historyList.innerHTML = '';
+            let history = JSON.parse(localStorage.getItem('faber_history') || '[]');
+            history.forEach(item => {
+                const li = document.createElement('li');
+                li.classList.add('history-item');
+                li.textContent = item;
+                historyList.appendChild(li);
+            });
+        }
+        // --- TYPING EFFECT ---
+        function typeText(element, text, speed = 30) {
+            let i = 0;
+            element.textContent = ""; // Clear snake loader
+            
+            // Add typing indicator dots at the end while typing
+            const indicator = document.createElement('span');
+            indicator.className = 'typing-indicator';
+            indicator.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+            element.appendChild(indicator);
+
+            function type() {
+                if (i < text.length) {
+                    element.textContent = text.charAt(i);
+                    element.appendChild(indicator); // Keep dots at end
+                    i++;
+                    scrollToBottom();
+                    setTimeout(type, speed);
+                } else {
+                    element.textContent = text; // Remove dots when done
+                }
+            }
+            type();
+        }
+
+        // --- SENDING MESSAGE ---
+        function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            // 1. Add User Message
+            const userMsg = createMessageElement(text, true);
+            messagesContainer.appendChild(userMsg);
+            userInput.value = '';
+            addToHistory(text);
+            scrollToBottom();
+
+            // 2. Add AI Loading Message
+            const aiMsgDiv = document.createElement('div');
+            aiMsgDiv.classList.add('message');
+            
+            const aiAvatar = document.createElement('div');
+            aiAvatar.classList.add('avatar');
+            const aiImg = document.createElement('img');
+            aiImg.src = 'faber.png';
+            aiAvatar.appendChild(aiImg);
+
+            const aiBubble = document.createElement('div');
+            aiBubble.classList.add('bubble');            // Snake Loader
+            aiBubble.innerHTML = `<div class="snake-loader-container"><div class="snake-loader"></div></div>`;
+
+            aiMsgDiv.appendChild(aiAvatar);
+            aiMsgDiv.appendChild(aiBubble);
+            messagesContainer.appendChild(aiMsgDiv);
+            scrollToBottom();
+
+            // 3. Wait 4 seconds (Fake AI thinking)
+            setTimeout(() => {
+                // Remove snake loader, start typing effect
+                const responseText = "Это симуляция ответа нейросети Faber. Я обрабатываю ваш запрос: " + text + ". В реальном приложении здесь был бы ответ от API.";
+                typeText(aiBubble, responseText);
+            }, AI_THINKING_TIME);
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+    </script>
+</body>
+</html>
